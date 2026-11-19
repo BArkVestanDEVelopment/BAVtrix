@@ -1,0 +1,22 @@
+# Build output
+target/
+*.o
+*.obj
+
+# Local-only material: unpacked original ZMatrix, helper tools, release binaries
+# (binaries are published as GitHub Release assets, not committed)
+original/
+tools/
+release/
+
+# Scratch / test folders
+_*/
+debug.flag
+debug.log
+crash.log
+*.bak
+
+# Binaries are never committed
+*.exe
+*.scr
+*.dll
