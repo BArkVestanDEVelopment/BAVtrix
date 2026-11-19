@@ -47,9 +47,15 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/BAVtrix.app
           mkdir -p shots
-          xcrun simctl launch "$UDID" dev.barkvestan.bavtrix -debugOverlay YES
+          xcrun simctl launch "$UDID" dev.barkvestan.bavtrix
+          sleep 6
+          # Video of the running rain (about 20 seconds), stopped cleanly so the file is finalized.
+          xcrun simctl io "$UDID" recordVideo --codec h264 --force shots/rain.mp4 &
+          REC=$!
           sleep 20
           xcrun simctl io "$UDID" screenshot shots/rain.png
+          kill -INT $REC
+          wait $REC || true
           xcrun simctl terminate "$UDID" dev.barkvestan.bavtrix
           xcrun simctl launch "$UDID" dev.barkvestan.bavtrix -showSettings YES
           sleep 8
