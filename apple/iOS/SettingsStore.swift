@@ -4,7 +4,8 @@ import BAVtrixCore
 
 /// Settings shared by the views, saved to UserDefaults as JSON.
 final class SettingsStore: ObservableObject {
-    private static let key = "bavtrix.config.v1"
+    // Versioned: bumping it makes everybody start from the new defaults.
+    private static let key = "bavtrix.config.v2"
 
     @Published var config: RainConfig {
         didSet { save() }
@@ -17,6 +18,14 @@ final class SettingsStore: ObservableObject {
         } else {
             config = RainConfig()
         }
+        #if DEBUG
+        // CI screenshots: `-debugPicture YES` turns the picture effect on with a generated picture.
+        if UserDefaults.standard.bool(forKey: "debugPicture") {
+            PictureStore.makeDebugPicture()
+            config.usePicture = true
+            config.pictureVersion += 1
+        }
+        #endif
     }
 
     func reset() {

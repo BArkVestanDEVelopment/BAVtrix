@@ -211,8 +211,8 @@ public final class RainSim {
             let head = streams[si].head
             let len = streams[si].len
             let sid = streams[si].slot
-            // Head shimmer.
-            if rng.unit() < hs { mutate(col: col, row: head, sid: sid, flash: false) }
+            // Head shimmer: `hs` is the chance per 33 ms, so a 120 Hz screen does not strobe.
+            if rng.unit() < min(hs * dtMs / 33, 1) { mutate(col: col, row: head, sid: sid, flash: false) }
             for n in 0..<8 {
                 if rng.unit() > pMut { continue }
                 let row = head - 1 - rng.below(max(len, 1))
