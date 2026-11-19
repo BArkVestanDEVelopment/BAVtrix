@@ -28,3 +28,11 @@ apple/shots/
 apple/build.log
 apple/BAVtrixCore/.build/
 *.xcuserstate
+
+# Android
+android/local.properties
+android/.gradle/
+android/**/build/
+android/.kotlin/
+*.apk
+*.aab

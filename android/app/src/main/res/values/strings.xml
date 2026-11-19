@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BAVtrix</string>
+    <string name="settings">Настройки</string>
+    <string name="wallpaper_description">Матричный дождь на главном экране и экране блокировки</string>
+</resources>
