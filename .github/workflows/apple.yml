@@ -47,7 +47,7 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/BAVtrix.app
           mkdir -p shots
-          xcrun simctl launch "$UDID" dev.barkvestan.bavtrix
+          xcrun simctl launch "$UDID" dev.barkvestan.bavtrix -debugOverlay YES
           sleep 20
           xcrun simctl io "$UDID" screenshot shots/rain.png
           xcrun simctl terminate "$UDID" dev.barkvestan.bavtrix

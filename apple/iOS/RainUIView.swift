@@ -31,6 +31,7 @@ final class RainUIView: UIView {
     private var cellH: CGFloat = 14
     private var ascent: CGFloat = 11
     private var laidOutSize = CGSize.zero
+    private var ticks = 0
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -121,6 +122,7 @@ final class RainUIView: UIView {
         if lastTimestamp == 0 { lastTimestamp = l.timestamp }
         let dt = min(max((l.timestamp - lastTimestamp) * 1000, 1), 250)
         lastTimestamp = l.timestamp
+        ticks += 1
         sim?.advance(dtMs: Float(dt))
         setNeedsDisplay()
     }
@@ -138,11 +140,14 @@ final class RainUIView: UIView {
         ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
         let x0 = (bounds.width - CGFloat(sim.cols) * cellW) / 2
         let y0 = (bounds.height - CGFloat(sim.rows) * cellH) / 2
+        var lit = 0
+        var drawn = 0
 
         for row in 0..<sim.rows {
             for col in 0..<sim.cols {
                 let cell = sim.cells[row * sim.cols + col]
                 guard let c = Palette.color(cell: cell, row: row, sim: sim) else { continue }
+                lit += 1
                 let isSpecialGlyph = cell.flags & CellFlag.specialGlyph != 0
                 let table = isSpecialGlyph ? specialGlyphs : glyphs
                 let index = Int(cell.glyph)
@@ -153,7 +158,24 @@ final class RainUIView: UIView {
                 var glyph = table[index]
                 var position = CGPoint(x: x0 + CGFloat(col) * cellW, y: y0 + CGFloat(row) * cellH + ascent)
                 CTFontDrawGlyphs(isSpecialGlyph ? specialFont : font, &glyph, &position, 1, ctx)
+                drawn += 1
             }
+        }
+
+        if UserDefaults.standard.bool(forKey: "debugOverlay") {
+            ctx.textMatrix = .identity
+            let fontName = CTFontCopyPostScriptName(font) as String
+            let fileFound = Bundle.main.url(forResource: "MatrixCodeFont", withExtension: "ttf") != nil
+            let usable = glyphs.filter { $0 != 0 }.count
+            let text = "\(sim.cols)x\(sim.rows) cell \(cellW)x\(cellH) streams \(sim.streamCount) "
+                + "lit \(lit) drawn \(drawn) glyphs \(usable)/\(glyphs.count) "
+                + "font \(fontName) file \(fileFound) ticks \(ticks) bounds \(Int(bounds.width))x\(Int(bounds.height))"
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular),
+                .foregroundColor: UIColor.yellow,
+                .backgroundColor: UIColor.black,
+            ]
+            (text as NSString).draw(in: CGRect(x: 4, y: 40, width: bounds.width - 8, height: 120), withAttributes: attrs)
         }
     }
 }
