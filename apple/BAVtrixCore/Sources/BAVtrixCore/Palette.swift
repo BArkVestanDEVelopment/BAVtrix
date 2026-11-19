@@ -48,7 +48,7 @@ public enum Palette {
 }
 
 extension Palette {
-    /// Brightness of a lit cell for the picture effect (0.25...1): far streams (low depth shade)
+    /// Brightness of a lit cell for the picture effect (0.06...1): far streams (low depth shade)
     /// and the fading end of a trail show the picture dimmer, so the picture gets depth too.
     public static func depthLevel(cell: Cell, row: Int, sim: RainSim) -> Float {
         let bright = cell.flags & (CellFlag.head | CellFlag.flash) != 0
@@ -57,7 +57,7 @@ extension Palette {
         let len = Float(max(slot.len, 1))
         let fade: Float = bright ? 1 : 0.12 + 0.88 * powf(min(max(1 - age / len, 0), 1), 1.3)
         let level = min(Float(cell.shade) * fade / 255, 1)
-        let v = 0.25 + 0.75 * level
+        let v = 0.06 + 0.94 * powf(level, 2.2)
         return (v * 32).rounded() / 32
     }
 }
