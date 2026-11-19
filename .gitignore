@@ -20,3 +20,11 @@ crash.log
 *.exe
 *.scr
 *.dll
+
+# Apple build output
+apple/BAVtrix.xcodeproj/
+apple/build/
+apple/shots/
+apple/build.log
+apple/BAVtrixCore/.build/
+*.xcuserstate

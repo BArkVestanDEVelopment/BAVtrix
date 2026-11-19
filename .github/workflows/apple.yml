@@ -1,0 +1,64 @@
+name: Apple
+
+on:
+  push:
+    paths:
+      - "apple/**"
+      - ".github/workflows/apple.yml"
+  workflow_dispatch:
+
+jobs:
+  core:
+    name: Core tests
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift tests
+        working-directory: apple/BAVtrixCore
+        run: swift test
+
+  ios:
+    name: iOS build and simulator screenshots
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: apple
+        run: xcodegen generate
+
+      - name: Build for iOS Simulator
+        working-directory: apple
+        run: |
+          set -o pipefail
+          xcodebuild -project BAVtrix.xcodeproj -scheme BAVtrix-iOS \
+            -sdk iphonesimulator -configuration Debug -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | tail -n 60
+
+      - name: Run in the simulator and take screenshots
+        working-directory: apple
+        run: |
+          UDID=$(xcrun simctl list devices available -j | jq -r '[.devices[] | .[] | select(.name | test("^iPhone"))][0].udid')
+          echo "Simulator: $UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl install "$UDID" build/Build/Products/Debug-iphonesimulator/BAVtrix.app
+          mkdir -p shots
+          xcrun simctl launch "$UDID" dev.barkvestan.bavtrix
+          sleep 20
+          xcrun simctl io "$UDID" screenshot shots/rain.png
+          xcrun simctl terminate "$UDID" dev.barkvestan.bavtrix
+          xcrun simctl launch "$UDID" dev.barkvestan.bavtrix -showSettings YES
+          sleep 8
+          xcrun simctl io "$UDID" screenshot shots/settings.png
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-results
+          path: |
+            apple/shots
+            apple/build.log
