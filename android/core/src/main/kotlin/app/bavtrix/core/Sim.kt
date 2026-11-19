@@ -197,9 +197,10 @@ class RainSim(val cols: Int, val rows: Int, initial: RainConfig, seed: Long) {
         val k = min(max(dtMs / 33f, 0.3f), 3f)
         // 8 attempts per frame: at strength 0.5 about 4 characters of each trail change.
         val pMut = min(s * k, 1f)
+        // Head shimmer: `hs` is the chance per 33 ms, so a 120 Hz screen does not strobe.
+        val pHead = min(hs * dtMs / 33f, 1f)
         for (st in streams) {
-            // Head shimmer.
-            if (rng.unit() < hs) mutate(st.col, st.head, st.slot, false)
+            if (rng.unit() < pHead) mutate(st.col, st.head, st.slot, false)
             for (n in 0 until 8) {
                 if (rng.unit() > pMut) continue
                 val row = st.head - 1 - rng.below(max(st.len, 1))

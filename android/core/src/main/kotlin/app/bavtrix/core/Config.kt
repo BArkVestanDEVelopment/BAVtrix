@@ -8,24 +8,24 @@ data class Rgba(val r: Int, val g: Int, val b: Int, val a: Int = 255) {
 /** All user settings. Names and meaning follow the Windows `default.cfg`. */
 data class RainConfig(
     val maxStream: Int = 2000,
-    val speedVariance: Float = 5f,
+    val speedVariance: Float = 8f,
     val monotonousCleanup: Boolean = false,
     val backTrace: Int = 40,
     val randomizedCleanup: Boolean = false,
     val leading: Int = 10,
     val spacePad: Int = 30,
     /** Milliseconds a base-speed stream needs to move one row down. */
-    val refreshMs: Float = 50f,
+    val refreshMs: Float = 100f,
     val specialProbability: Float = 0.1f,
     /** Share of time a column carries a stream (rain density), 0..1. */
-    val spawnRate: Float = 0.5f,
+    val spawnRate: Float = 0.8f,
     /** Shimmer strength of trail characters, 0..1. */
-    val flicker: Float = 0.25f,
+    val flicker: Float = 0.3f,
     /** Chance per frame that a head symbol changes, 0..1. */
     val headFlicker: Float = 1f,
     /** Brightness of heads and flashes, 0.5..2. */
     val headBrightness: Float = 1.3f,
-    val trailMin: Int = 8,
+    val trailMin: Int = 16,
     /** 0 = automatic (grows with density). */
     val trailMax: Int = 0,
     val charset: String = "1234567890ABCDEFGHIJKLMNOPQRSUTVWXYZabcd",
@@ -35,8 +35,8 @@ data class RainConfig(
     val bg: Rgba = Rgba(0, 0, 0),
     val specialFg: Rgba = Rgba(251, 255, 251),
     val specialFade: Rgba = Rgba(208, 244, 208, 128),
-    /** Glyph size in dp. */
-    val glyphSize: Float = 14f,
+    /** Glyph size in dp (small glyphs = many columns, like on the desktop). */
+    val glyphSize: Float = 9f,
 ) {
     val charsetChars: CharArray get() = charset.toCharArray()
 

@@ -7,7 +7,8 @@ import app.bavtrix.core.Rgba
 
 /** Settings shared by the app, the live wallpaper and the screensaver (one SharedPreferences file). */
 object SettingsStore {
-    private const val FILE = "bavtrix"
+    // Versioned: bumping it makes everybody start from the new defaults.
+    private const val FILE = "bavtrix_v2"
 
     fun prefs(context: Context): SharedPreferences =
         context.applicationContext.getSharedPreferences(FILE, Context.MODE_PRIVATE)
