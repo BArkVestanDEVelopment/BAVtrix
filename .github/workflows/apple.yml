@@ -11,6 +11,7 @@ jobs:
   core:
     name: Core tests
     runs-on: macos-26
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Swift tests
@@ -20,6 +21,7 @@ jobs:
   ios:
     name: iOS build and simulator screenshots
     runs-on: macos-26
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
@@ -55,7 +57,9 @@ jobs:
           sleep 20
           xcrun simctl io "$UDID" screenshot shots/rain.png
           kill -INT $REC
-          wait $REC || true
+          # Bounded wait: never block the job if the recorder does not exit.
+          for i in $(seq 1 20); do kill -0 $REC 2>/dev/null || break; sleep 1; done
+          kill -KILL $REC 2>/dev/null || true
           xcrun simctl terminate "$UDID" dev.barkvestan.bavtrix
           xcrun simctl launch "$UDID" dev.barkvestan.bavtrix -showSettings YES
           sleep 8
