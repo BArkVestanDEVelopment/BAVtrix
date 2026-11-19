@@ -51,3 +51,20 @@ object Palette {
         return Rgba(r, g, b, base.a).argb
     }
 }
+
+/**
+ * Brightness of a lit cell for the picture effect (0.25..1): far streams (low depth shade) and the
+ * fading end of a trail show the picture dimmer, so the picture gets depth like the rain itself.
+ */
+fun Palette.depthLevel(sim: RainSim, idx: Int, row: Int): Float {
+    val f = sim.flags[idx]
+    val bright = f and (CellFlag.HEAD or CellFlag.FLASH) != 0
+    val id = sim.sid[idx]
+    val slot = if (id < sim.slots.size) sim.slots[id] else Slot()
+    val age = max(slot.head - row, 0).toFloat()
+    val len = max(slot.len, 1).toFloat()
+    val fade = if (bright) 1f else 0.12f + 0.88f * min(max(1 - age / len, 0f), 1f).pow(1.3f)
+    val level = min(sim.shade[idx] * fade / 255f, 1f)
+    val v = 0.25f + 0.75f * level
+    return (v * 32).roundToInt() / 32f
+}

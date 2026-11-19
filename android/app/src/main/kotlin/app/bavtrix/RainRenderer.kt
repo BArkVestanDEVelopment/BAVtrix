@@ -13,6 +13,7 @@ import android.graphics.Shader
 import android.graphics.Typeface
 import app.bavtrix.core.CellFlag
 import app.bavtrix.core.Palette
+import app.bavtrix.core.depthLevel
 import app.bavtrix.core.RainConfig
 import app.bavtrix.core.RainSim
 import kotlin.math.ceil
@@ -146,7 +147,7 @@ class RainRenderer(context: Context) {
             // AND: the picture is multiplied by the cell colour (picture tinted by the rain).
             2 -> LightingColorFilter(Color.rgb(r, g, b), Color.BLACK)
             // Copy: the glyph shows the picture itself.
-            else -> LightingColorFilter(Color.WHITE, Color.BLACK)
+            else -> LightingColorFilter(Color.rgb(r, g, b), Color.BLACK)
         }
         filters[key] = f
         return f
@@ -171,7 +172,12 @@ class RainRenderer(context: Context) {
                 if (g >= table.size) continue
                 paint.typeface = if (special) Typeface.MONOSPACE else matrixTypeface
                 if (shader != null) {
-                    paint.colorFilter = filterFor(color, config.pictureBlend)
+                    // Copy: the cell's depth dims the picture (far streams and trail ends are darker).
+                    val tint = if (config.pictureBlend == 0) {
+                        val v = (Palette.depthLevel(s, idx, row) * 255).toInt()
+                        Color.rgb(v, v, v)
+                    } else color
+                    paint.colorFilter = filterFor(tint, config.pictureBlend)
                     paint.alpha = (color ushr 24)
                 } else {
                     paint.colorFilter = null

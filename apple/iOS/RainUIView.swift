@@ -146,7 +146,7 @@ final class RainUIView: UIView {
     /// Draws every lit cell into `ctx`, which must use Core Graphics' usual y-up coordinates
     /// for a surface that is `height` points tall.
     @discardableResult
-    private func drawGlyphs(_ ctx: CGContext, sim: RainSim, height: CGFloat) -> (lit: Int, drawn: Int) {
+    private func drawGlyphs(_ ctx: CGContext, sim: RainSim, height: CGFloat, depthOnly: Bool = false) -> (lit: Int, drawn: Int) {
         let x0 = (bounds.width - CGFloat(sim.cols) * cellW) / 2
         let y0 = (bounds.height - CGFloat(sim.rows) * cellH) / 2
         var lit = 0
@@ -154,7 +154,12 @@ final class RainUIView: UIView {
         for row in 0..<sim.rows {
             for col in 0..<sim.cols {
                 let cell = sim.cells[row * sim.cols + col]
-                guard let c = Palette.color(cell: cell, row: row, sim: sim) else { continue }
+                guard var c = Palette.color(cell: cell, row: row, sim: sim) else { continue }
+                if depthOnly {
+                    // Copy mode: only the depth matters, the glyph shows the picture dimmed by it.
+                    let v = UInt8(Palette.depthLevel(cell: cell, row: row, sim: sim) * 255)
+                    c = RGBA(v, v, v, c.a)
+                }
                 lit += 1
                 let isSpecialGlyph = cell.flags & CellFlag.specialGlyph != 0
                 let table = isSpecialGlyph ? specialGlyphs : glyphs
@@ -209,7 +214,7 @@ final class RainUIView: UIView {
         gctx.saveGState()
         gctx.scaleBy(x: scale, y: scale)
         gctx.textMatrix = .identity
-        let stats = drawGlyphs(gctx, sim: sim, height: bounds.height)
+        let stats = drawGlyphs(gctx, sim: sim, height: bounds.height, depthOnly: config.pictureBlend == 0)
         gctx.restoreGState()
         guard let glyphImage = gctx.makeImage() else { return nil }
 
@@ -221,6 +226,11 @@ final class RainUIView: UIView {
         pctx.restoreGState()
         pctx.setBlendMode(.destinationIn)
         pctx.draw(glyphImage, in: full)
+        if config.pictureBlend == 0 {
+            // Copy: dim the picture by the glyph's depth (the glyph layer holds grey levels here).
+            pctx.setBlendMode(.multiply)
+            pctx.draw(glyphImage, in: full)
+        }
         pctx.setBlendMode(.normal)
         guard let pictureImage = pctx.makeImage() else { return nil }
 
