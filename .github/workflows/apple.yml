@@ -1,4 +1,4 @@
-name: Apple
+﻿name: Apple
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 jobs:
   core:
     name: Core tests
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
       - name: Swift tests
@@ -19,7 +19,7 @@ jobs:
 
   ios:
     name: iOS build and simulator screenshots
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
 
