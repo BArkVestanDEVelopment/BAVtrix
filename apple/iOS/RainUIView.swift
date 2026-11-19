@@ -136,8 +136,12 @@ final class RainUIView: UIView {
         ctx.fill(bounds)
         guard let sim = sim else { return }
 
-        // UIKit's context has its origin at the top left, Core Text expects the opposite.
-        ctx.textMatrix = CGAffineTransform(scaleX: 1, y: -1)
+        // UIKit's context has its origin at the top left, Core Text expects the opposite. Flip the
+        // whole context once (the text matrix would also move the glyph positions off screen).
+        ctx.saveGState()
+        ctx.translateBy(x: 0, y: bounds.height)
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.textMatrix = .identity
         let x0 = (bounds.width - CGFloat(sim.cols) * cellW) / 2
         let y0 = (bounds.height - CGFloat(sim.rows) * cellH) / 2
         var lit = 0
@@ -156,14 +160,17 @@ final class RainUIView: UIView {
                 ctx.setFillColor(red: CGFloat(c.r) / 255, green: CGFloat(c.g) / 255,
                                  blue: CGFloat(c.b) / 255, alpha: CGFloat(c.a) / 255)
                 var glyph = table[index]
-                var position = CGPoint(x: x0 + CGFloat(col) * cellW, y: y0 + CGFloat(row) * cellH + ascent)
+                // Baseline in the flipped (y up) coordinates.
+                let baselineFromTop = y0 + CGFloat(row) * cellH + ascent
+                var position = CGPoint(x: x0 + CGFloat(col) * cellW, y: bounds.height - baselineFromTop)
                 CTFontDrawGlyphs(isSpecialGlyph ? specialFont : font, &glyph, &position, 1, ctx)
                 drawn += 1
             }
         }
 
+        ctx.restoreGState()
+
         if UserDefaults.standard.bool(forKey: "debugOverlay") {
-            ctx.textMatrix = .identity
             let fontName = CTFontCopyPostScriptName(font) as String
             let fileFound = Bundle.main.url(forResource: "MatrixCodeFont", withExtension: "ttf") != nil
             let usable = glyphs.filter { $0 != 0 }.count
