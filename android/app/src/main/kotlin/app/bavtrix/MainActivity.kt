@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme()) {
+            BavShieldTheme {
                 val context = LocalContext.current
                 Box(Modifier.fillMaxSize()) {
                     AndroidView(factory = { RainView(it) }, modifier = Modifier.fillMaxSize())
@@ -37,17 +37,8 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        val buttonColors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Black.copy(alpha = 0.55f),
-                            contentColor = Color.White,
-                        )
-                        Button(onClick = { setAsLiveWallpaper(context) }, colors = buttonColors) {
-                            Text("Живые обои")
-                        }
-                        Button(
-                            onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) },
-                            colors = buttonColors,
-                        ) {
+                        NeonButton(onClick = { setAsLiveWallpaper(context) }) { Text("Живые обои") }
+                        NeonButton(onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) }) {
                             Text("Настройки")
                         }
                     }
