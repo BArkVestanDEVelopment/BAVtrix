@@ -32,6 +32,10 @@ object SettingsStore {
             trailMin = p.getInt("trailMin", d.trailMin),
             trailMax = p.getInt("trailMax", d.trailMax),
             glyphSize = p.getFloat("glyphSize", d.glyphSize),
+            usePicture = p.getBoolean("usePicture", d.usePicture),
+            pictureVersion = p.getInt("pictureVersion", d.pictureVersion),
+            pictureCover = p.getBoolean("pictureCover", d.pictureCover),
+            pictureBlend = p.getInt("pictureBlend", d.pictureBlend),
             fg = p.rgba("fg", d.fg),
             fade = p.rgba("fade", d.fade),
             bg = p.rgba("bg", d.bg),
@@ -50,6 +54,10 @@ object SettingsStore {
             .putInt("trailMin", c.trailMin)
             .putInt("trailMax", c.trailMax)
             .putFloat("glyphSize", c.glyphSize)
+            .putBoolean("usePicture", c.usePicture)
+            .putInt("pictureVersion", c.pictureVersion)
+            .putBoolean("pictureCover", c.pictureCover)
+            .putInt("pictureBlend", c.pictureBlend)
             .putInt("fg", c.fg.argb)
             .putInt("fade", c.fade.argb)
             .putInt("bg", c.bg.argb)

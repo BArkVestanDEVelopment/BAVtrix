@@ -1,8 +1,13 @@
 package app.bavtrix
 
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -60,6 +65,21 @@ private fun SettingsScreen() {
         cfg = new
         SettingsStore.save(context, new)
     }
+    val pickPicture = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null && PictureStore.save(context, uri)) {
+            update(cfg.copy(usePicture = true, pictureVersion = cfg.pictureVersion + 1))
+        }
+    }
+    // Debug builds only (adb): turn the picture on without going through the system picker.
+    val debuggable = (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+    if (debuggable) {
+        val activity = context as? ComponentActivity
+        LaunchedEffect(Unit) {
+            if (activity?.intent?.getBooleanExtra("debugUsePicture", false) == true) {
+                update(cfg.copy(usePicture = true, pictureVersion = cfg.pictureVersion + 1))
+            }
+        }
+    }
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
@@ -70,7 +90,7 @@ private fun SettingsScreen() {
         SliderRow("Плотность", cfg.spawnRate * 100, 5f..97f, { "%.0f%%".format(it) }) { update(cfg.copy(spawnRate = it / 100)) }
         SliderRow("Разброс скоростей", cfg.speedVariance, 1f..20f, { "%.0f".format(it) }) { update(cfg.copy(speedVariance = it)) }
         SliderRow("Время шага, мс", cfg.refreshMs, 10f..300f, { "%.0f".format(it) }) { update(cfg.copy(refreshMs = it)) }
-        SliderRow("Размер символов", cfg.glyphSize, 8f..30f, { "%.0f dp".format(it) }) { update(cfg.copy(glyphSize = it)) }
+        SliderRow("Размер символов", cfg.glyphSize, 5f..30f, { "%.0f dp".format(it) }) { update(cfg.copy(glyphSize = it)) }
         SliderRow("Спецстрока", cfg.specialProbability * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(specialProbability = it / 100)) }
 
         Text("Шлейф", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp))
@@ -81,6 +101,46 @@ private fun SettingsScreen() {
         SliderRow("Символы в шлейфе", cfg.flicker * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(flicker = it / 100)) }
         SliderRow("Голова потока", cfg.headFlicker * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(headFlicker = it / 100)) }
         SliderRow("Яркость головы", cfg.headBrightness * 100, 50f..200f, { "%.0f%%".format(it) }) { update(cfg.copy(headBrightness = it / 100)) }
+
+        Text("Картинка сквозь символы", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp))
+        Text(
+            "Выбранная картинка проступает через символы дождя, как обои рабочего стола на компьютере.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Показывать картинку")
+            Switch(
+                checked = cfg.usePicture,
+                onCheckedChange = { update(cfg.copy(usePicture = it, pictureVersion = cfg.pictureVersion + 1)) },
+            )
+        }
+        Text("Смешивание картинки с символами")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Copy" to 0, "OR" to 1, "AND" to 2).forEach { (name, mode) ->
+                FilterChip(
+                    selected = cfg.pictureBlend == mode,
+                    onClick = { update(cfg.copy(pictureBlend = mode)) },
+                    label = { Text(name) },
+                )
+            }
+        }
+        Text(
+            "Copy: символы показывают саму картинку. OR: к картинке добавляется цвет шлейфа. AND: картинка окрашивается цветом шлейфа.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("Заполнить весь экран (обрезать)")
+            Switch(checked = cfg.pictureCover, onCheckedChange = { update(cfg.copy(pictureCover = it)) })
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { pickPicture.launch("image/*") }) { Text("Выбрать картинку") }
+            OutlinedButton(onClick = {
+                PictureStore.delete(context)
+                update(cfg.copy(usePicture = false, pictureVersion = cfg.pictureVersion + 1))
+            }) { Text("Убрать") }
+        }
 
         Text("Цвет", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 12.dp))
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {

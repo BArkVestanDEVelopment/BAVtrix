@@ -35,6 +35,14 @@ data class RainConfig(
     val bg: Rgba = Rgba(0, 0, 0),
     val specialFg: Rgba = Rgba(251, 255, 251),
     val specialFade: Rgba = Rgba(208, 244, 208, 128),
+    /** The chosen picture shows through the glyphs (the desktop version's wallpaper effect). */
+    val usePicture: Boolean = false,
+    /** Bumped whenever the picture file is replaced, so renderers reload it. */
+    val pictureVersion: Int = 0,
+    /** true = fill the whole screen (crop the picture), false = fit the whole picture. */
+    val pictureCover: Boolean = false,
+    /** How the picture is mixed with the glyph colour: 0 = Copy, 1 = OR (add), 2 = AND (multiply). */
+    val pictureBlend: Int = 0,
     /** Glyph size in dp (small glyphs = many columns, like on the desktop). */
     val glyphSize: Float = 9f,
 ) {
