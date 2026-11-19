@@ -27,14 +27,9 @@ struct ContentView: View {
             Button {
                 showSettings = true
             } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .padding(14)
-                    .background(Color.black.opacity(0.45))
-                    .clipShape(Circle())
+                Text("Настройки").glassPill()
             }
-            .opacity(0.55)
+            .opacity(0.85)
             .padding(20)
             .accessibilityLabel("Настройки")
         }
