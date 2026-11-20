@@ -16,12 +16,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -88,7 +90,7 @@ private fun SettingsScreen() {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         GlowTitle("Настройки")
-        Text("BAVtrix · матричный дождь", color = Brand.Text2, modifier = Modifier.padding(start = 2.dp))
+        Text("BAVtrix · цифровой дождь", color = Brand.Text2, modifier = Modifier.padding(start = 2.dp))
 
         SectionTitle("Дождь")
         NeonCard {
@@ -167,12 +169,31 @@ private fun SettingsScreen() {
             }
         }
         Text(
-            "BAVtrix 1.0 · BArkVestan_Development · GPL-2.0",
+            "BAVtrix 1.0 · © 2026 BArkVestan Development",
             style = MaterialTheme.typography.bodySmall,
             color = Brand.Text2,
             modifier = Modifier.padding(top = 10.dp),
         )
+        var showLicenses by remember { mutableStateOf(false) }
+        NeonOutlinedButton(onClick = { showLicenses = true }, modifier = Modifier.padding(top = 8.dp)) { Text("Лицензии") }
+        if (showLicenses) LicensesDialog { showLicenses = false }
     }
+}
+
+/** The licence texts of the third-party components, read from the app's assets. */
+@Composable
+private fun LicensesDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val text = remember {
+        runCatching { context.assets.open("THIRD_PARTY_NOTICES.txt").bufferedReader().use { it.readText() } }
+            .getOrElse { "THIRD_PARTY_NOTICES.txt is missing from the app." }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Закрыть") } },
+        title = { Text("Лицензии") },
+        text = { Column(Modifier.verticalScroll(rememberScrollState())) { Text(text, style = MaterialTheme.typography.bodySmall) } },
+    )
 }
 
 @Composable

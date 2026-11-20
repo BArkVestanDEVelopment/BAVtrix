@@ -28,6 +28,8 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
+    // The licence texts live in the repository's legal folder and are shipped as assets.
+    sourceSets.getByName("main").assets.srcDir("../../legal")
 }
 
 dependencies {

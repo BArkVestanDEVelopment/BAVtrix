@@ -38,7 +38,7 @@ public struct RainConfig: Codable, Equatable {
     /// 0 = automatic (grows with density).
     public var trailMax = 0
     public var charset = "1234567890ABCDEFGHIJKLMNOPQRSUTVWXYZabcd"
-    public var specialStrings = ["The matrix has you"]
+    public var specialStrings = ["Welcome to BAVtrix"]
     public var fg = RGBA(187, 255, 187)
     public var fade = RGBA(0, 128, 0)
     public var bg = RGBA(0, 0, 0)

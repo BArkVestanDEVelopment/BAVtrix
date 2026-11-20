@@ -29,7 +29,7 @@ data class RainConfig(
     /** 0 = automatic (grows with density). */
     val trailMax: Int = 0,
     val charset: String = "1234567890ABCDEFGHIJKLMNOPQRSUTVWXYZabcd",
-    val specialStrings: List<String> = listOf("The matrix has you"),
+    val specialStrings: List<String> = listOf("Welcome to BAVtrix"),
     val fg: Rgba = Rgba(187, 255, 187),
     val fade: Rgba = Rgba(0, 128, 0),
     val bg: Rgba = Rgba(0, 0, 0),

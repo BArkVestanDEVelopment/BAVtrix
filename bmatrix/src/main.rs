@@ -1,5 +1,5 @@
 #![windows_subsystem = "windows"]
-//! BAVtrix: modern re-implementation of ZMatrix for high-DPI / multi-monitor Windows.
+//! BAVtrix: digital rain for the Windows desktop (high-DPI, multi-monitor).
 //!
 //!   bavtrix.exe        desktop overlay (click-through, tray icon to exit)
 //!   bavtrix.scr /s     screensaver

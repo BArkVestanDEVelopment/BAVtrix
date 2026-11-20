@@ -21,6 +21,7 @@ struct SettingsView: View {
     @EnvironmentObject var store: SettingsStore
     @Environment(\.dismiss) private var dismiss
     @State private var pickerItem: PhotosPickerItem?
+    @State private var showLicenses = false
 
     var body: some View {
         ZStack {
@@ -28,7 +29,7 @@ struct SettingsView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Настройки").font(Brand.font(30, .bold)).foregroundColor(Brand.text)
-                    Text("BAVtrix · матричный дождь").font(Brand.font(15)).foregroundColor(Brand.text2)
+                    Text("BAVtrix · цифровой дождь").font(Brand.font(15)).foregroundColor(Brand.text2)
 
                     SectionTitle("Дождь")
                     NeonCard {
@@ -99,15 +100,20 @@ struct SettingsView: View {
                     .padding(.top, 18)
                     .padding(.horizontal, 4)
 
-                    Text("BAVtrix 1.0 · BArkVestan_Development · GPL-2.0")
+                    Text("BAVtrix 1.0 · © 2026 BArkVestan Development")
                         .font(Brand.font(12)).foregroundColor(Brand.text2)
                         .padding(.top, 10)
+
+                    Button("Лицензии") { showLicenses = true }
+                        .buttonStyle(PillButtonStyle(glow: .soft))
+                        .padding(.top, 4)
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 22)
             }
         }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showLicenses) { LicensesView() }
         .onChange(of: pickerItem) { item in
             guard let item = item else { return }
             Task { @MainActor in

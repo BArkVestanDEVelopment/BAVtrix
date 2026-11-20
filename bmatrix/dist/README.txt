@@ -1,8 +1,8 @@
 BAVtrix 1.0
 ============
 
-Матричный дождь для рабочего стола Windows 10/11: современная версия ZMatrix
-(рассчитана на большие разрешения, масштабирование DPI и несколько мониторов).
+Цифровой дождь для рабочего стола Windows 10/11.
+Рассчитан на большие разрешения, масштабирование DPI и несколько мониторов.
 
 Файлы
 -----
@@ -32,6 +32,6 @@ Text        шрифты, набор символов, спецстроки
 Автозапуск: включается в установщике (setup.exe). Вручную: положите ярлык на
 bavtrix.exe в папку shell:startup.
 
-Автор: BArkVestan_Development.
-Лицензия: GPL-2.0-or-later (см. LICENSE.TXT).
-Идея и формат default.cfg: ZMatrix, Z. Shaker. Шрифт Matrix Code Font: e-RBi (freeware).
+Автор: BArkVestan Development.
+Copyright (c) 2026 BArkVestan Development. Все права защищены (см. LICENSE.TXT).
+Сторонние компоненты: THIRD_PARTY_NOTICES.txt.

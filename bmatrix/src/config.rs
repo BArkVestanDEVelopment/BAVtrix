@@ -1,4 +1,4 @@
-//! Parser for the original ZMatrix `default.cfg` format.
+//! Parser for the `default.cfg` settings format (INI-style, all keys optional).
 
 use std::collections::HashMap;
 
@@ -53,7 +53,7 @@ pub struct Config {
     pub bg_bitmap: bool,
     pub blend: Blend,
     /// Optional BAVtrix extension `[Colors] OverlayOpacity` (0-255): how strongly the
-    /// desktop overlay hides the desktop. Not present in original ZMatrix configs.
+    /// desktop overlay hides the desktop. Not part of the classic key set.
     pub overlay_opacity: u8,
     /// Optional BAVtrix extension `[General] SpawnRate` (0-1): rain density.
     pub spawn_rate: f32,
@@ -125,7 +125,7 @@ fn font(m: &Map, sec: &str, def_name: &str, def_h: i32) -> FontSpec {
     }
 }
 
-/// Parses a character list with ZMatrix escape rules:
+/// Parses a character list with these escape rules:
 /// separators are whitespace and ',', `\\` and `\,` are literals, `\0xHHHH` is a Unicode code point.
 pub fn parse_charset(s: &str) -> Vec<char> {
     let mut out = Vec::new();
@@ -299,7 +299,7 @@ fn num_str(v: f32) -> String {
     if v.fract() == 0.0 { format!("{}", v as i64) } else { format!("{v}") }
 }
 
-/// Character list in ZMatrix syntax (`,`-separated, non-ASCII as `\0xHHHH`).
+/// Character list in the same syntax (`,`-separated, non-ASCII as `\0xHHHH`).
 pub fn charset_text(chars: &[char]) -> String {
     chars
         .iter()

@@ -84,10 +84,10 @@ final class SimTests: XCTestCase {
     func testConfigRoundTripsThroughJSON() throws {
         var cfg = RainConfig()
         cfg.spawnRate = 0.77
-        cfg.specialStrings = ["BAVtrix", "wake up"]
+        cfg.specialStrings = ["BAVtrix", "hello world"]
         let data = try JSONEncoder().encode(cfg)
         let back = try JSONDecoder().decode(RainConfig.self, from: data)
         XCTAssertEqual(cfg, back)
-        XCTAssertEqual(back.specialChars.count, Set("BAVtrixwake up").count)
+        XCTAssertEqual(back.specialChars.count, Set("BAVtrixhello world").count)
     }
 }

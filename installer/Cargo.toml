@@ -4,7 +4,8 @@ version = "1.0.0"
 edition = "2021"
 authors = ["BArkVestan_Development"]
 description = "Installer for BAVtrix"
-license = "GPL-2.0-or-later"
+license-file = "../LICENSE"
+publish = false
 
 [build-dependencies]
 embed-resource = "2.5"
