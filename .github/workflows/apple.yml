@@ -77,3 +77,47 @@ jobs:
           path: |
             apple/shots
             apple/build.log
+
+  macos:
+    name: macOS build and desktop screenshot
+    runs-on: macos-26
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: apple
+        run: xcodegen generate
+
+      - name: Build the macOS app
+        working-directory: apple
+        run: |
+          set -o pipefail
+          xcodebuild -project BAVtrix.xcodeproj -scheme BAVtrix-macOS \
+            -configuration Debug -derivedDataPath build-mac \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build-mac.log | tail -n 60
+
+      - name: Run it and take screenshots of the desktop
+        working-directory: apple
+        run: |
+          mkdir -p shots-mac
+          open build-mac/Build/Products/Debug/BAVtrix.app
+          sleep 20
+          screencapture -x shots-mac/desktop.png || true
+          pkill -x BAVtrix || true
+          sleep 2
+          open build-mac/Build/Products/Debug/BAVtrix.app --args -showSettings
+          sleep 10
+          screencapture -x shots-mac/settings.png || true
+          pkill -x BAVtrix || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-results
+          path: |
+            apple/shots-mac
+            apple/build-mac.log

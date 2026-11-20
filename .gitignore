@@ -36,3 +36,6 @@ android/**/build/
 android/.kotlin/
 *.apk
 *.aab
+apple/build-mac/
+apple/shots-mac/
+apple/build-mac.log
