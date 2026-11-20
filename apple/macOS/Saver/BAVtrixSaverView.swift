@@ -1,4 +1,4 @@
-import AppKit
+﻿import AppKit
 import ScreenSaver
 import SwiftUI
 import BAVtrixCore
@@ -7,17 +7,17 @@ import BAVtrixCore
 @objc(BAVtrixSaverView)
 final class BAVtrixSaverView: ScreenSaverView {
     private var rain: RainNSView?
-    private let preview: Bool
+    private let previewMode: Bool
     private var sheet: NSWindow?
 
     override init?(frame: NSRect, isPreview: Bool) {
-        preview = isPreview
+        previewMode = isPreview
         super.init(frame: frame, isPreview: isPreview)
         setUp()
     }
 
     required init?(coder: NSCoder) {
-        preview = false
+        previewMode = false
         super.init(coder: coder)
         setUp()
     }
@@ -29,14 +29,14 @@ final class BAVtrixSaverView: ScreenSaverView {
         let view = RainNSView(frame: bounds)
         view.autoresizingMask = [.width, .height]
         view.drivesItself = false
-        view.config = SaverSettings.load(isPreview: preview)
+        view.config = SaverSettings.load(isPreview: previewMode)
         addSubview(view)
         rain = view
     }
 
     override func startAnimation() {
         super.startAnimation()
-        rain?.config = SaverSettings.load(isPreview: preview)
+        rain?.config = SaverSettings.load(isPreview: previewMode)
         rain?.reloadPicture()
     }
 
