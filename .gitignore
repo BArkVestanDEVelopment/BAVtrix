@@ -39,3 +39,5 @@ android/.kotlin/
 apple/build-mac/
 apple/shots-mac/
 apple/build-mac.log
+apple/build-saver.log
+apple/build-snapshot.log

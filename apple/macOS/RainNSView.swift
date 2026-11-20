@@ -37,6 +37,15 @@ final class RainNSView: NSView {
         }
     }
 
+    /// Where the bundled font is looked up. A screen saver runs inside another host process and
+    /// must point this at its own bundle.
+    static var resourceBundle: Bundle = .main
+    /// Overrides the font lookup completely (used by the command-line snapshot tool).
+    static var fontURLOverride: URL?
+
+    /// false when a host (the screen saver) calls `advanceFrame()` itself.
+    var drivesItself = true
+
     private var sim: RainSim?
     private var timer: Timer?
     private var lastTime: CFTimeInterval = 0
@@ -70,7 +79,9 @@ final class RainNSView: NSView {
 
     /// Loads the bundled Matrix Code Font (registered at runtime), falling back to Menlo.
     private static func matrixFont(size: CGFloat) -> CTFont {
-        if let url = Bundle.main.url(forResource: "MatrixCodeFont", withExtension: "ttf") {
+        let found = RainNSView.fontURLOverride
+            ?? RainNSView.resourceBundle.url(forResource: "MatrixCodeFont", withExtension: "ttf")
+        if let url = found {
             CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
             if let descriptors = CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor],
                let first = descriptors.first {
@@ -135,18 +146,25 @@ final class RainNSView: NSView {
         timer = nil
         guard window != nil else { return }
         reloadPicture()
-        let t = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in self?.tick() }
+        guard drivesItself else { return }
+        let t = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in self?.advanceFrame() }
         RunLoop.main.add(t, forMode: .common)
         timer = t
         lastTime = 0
     }
 
-    private func tick() {
+    /// Advances the rain by the real time since the previous call and redraws.
+    func advanceFrame() {
         let now = CACurrentMediaTime()
         if lastTime == 0 { lastTime = now }
         let dt = min(max((now - lastTime) * 1000, 1), 250)
         lastTime = now
-        sim?.advance(dtMs: Float(dt))
+        advance(byMs: Float(dt))
+    }
+
+    /// Advances the rain by a fixed time (tests and the snapshot tool use this).
+    func advance(byMs ms: Float) {
+        sim?.advance(dtMs: ms)
         needsDisplay = true
     }
 

@@ -114,6 +114,22 @@ jobs:
           screencapture -x shots-mac/settings.png || true
           pkill -x BAVtrix || true
 
+      - name: Build the screen saver and render its frames without a screen
+        working-directory: apple
+        run: |
+          set -o pipefail
+          xcodebuild -project BAVtrix.xcodeproj -scheme BAVtrix-Saver \
+            -configuration Debug -derivedDataPath build-mac \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build-saver.log | tail -n 40
+          xcodebuild -project BAVtrix.xcodeproj -scheme saver-snapshot \
+            -configuration Debug -derivedDataPath build-mac \
+            CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build-snapshot.log | tail -n 40
+          echo "--- saver bundle:"
+          find build-mac/Build/Products/Debug/BAVtrix.saver -maxdepth 3 | head -n 30
+          /usr/libexec/PlistBuddy -c "Print :NSPrincipalClass" build-mac/Build/Products/Debug/BAVtrix.saver/Contents/Info.plist
+          mkdir -p shots-mac
+          build-mac/Build/Products/Debug/saver-snapshot shots-mac iOS/MatrixCodeFont.ttf
+          ditto -c -k --keepParent build-mac/Build/Products/Debug/BAVtrix.saver shots-mac/BAVtrix-saver.zip
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -121,3 +137,5 @@ jobs:
           path: |
             apple/shots-mac
             apple/build-mac.log
+            apple/build-saver.log
+            apple/build-snapshot.log
