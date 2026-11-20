@@ -1,4 +1,4 @@
-﻿name: Apple
+name: Apple
 
 on:
   push:
@@ -128,7 +128,7 @@ jobs:
           find build-mac/Build/Products/Debug/BAVtrix.saver -maxdepth 3 | head -n 30
           /usr/libexec/PlistBuddy -c "Print :NSPrincipalClass" build-mac/Build/Products/Debug/BAVtrix.saver/Contents/Info.plist
           mkdir -p shots-mac
-          build-mac/Build/Products/Debug/saver-snapshot shots-mac iOS/MatrixCodeFont.ttf
+          build-mac/Build/Products/Debug/saver-snapshot shots-mac
           ditto -c -k --keepParent build-mac/Build/Products/Debug/BAVtrix.saver shots-mac/BAVtrix-saver.zip
       - uses: actions/upload-artifact@v4
         if: always()

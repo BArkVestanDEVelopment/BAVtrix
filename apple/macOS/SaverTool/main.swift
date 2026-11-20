@@ -3,15 +3,14 @@ import ScreenSaver
 import BAVtrixCore
 
 // Command-line check of the screen saver view: renders frames into PNG files without a screen.
-//   saver-snapshot <output-folder> <path to MatrixCodeFont.ttf>
+//   saver-snapshot <output-folder>
 
 let arguments = CommandLine.arguments
-guard arguments.count >= 3 else {
-    FileHandle.standardError.write(Data("usage: saver-snapshot <output-folder> <font.ttf>\n".utf8))
+guard arguments.count >= 2 else {
+    FileHandle.standardError.write(Data("usage: saver-snapshot <output-folder>\n".utf8))
     exit(2)
 }
 let outputFolder = URL(fileURLWithPath: arguments[1])
-RainNSView.fontURLOverride = URL(fileURLWithPath: arguments[2])
 try? FileManager.default.createDirectory(at: outputFolder, withIntermediateDirectories: true)
 
 _ = NSApplication.shared

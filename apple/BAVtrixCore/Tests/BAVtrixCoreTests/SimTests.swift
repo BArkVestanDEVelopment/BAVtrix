@@ -27,7 +27,7 @@ final class SimTests: XCTestCase {
         run(sim, seconds: 15)
         for c in sim.cells where c.flags & CellFlag.on != 0 {
             XCTAssertLessThan(Int(c.sid), sim.slots.count)
-            XCTAssertLessThan(Int(c.glyph), max(sim.config.charsetChars.count, sim.config.specialChars.count))
+            XCTAssertLessThan(Int(c.glyph), max(GlyphData.shapes.count, sim.config.specialChars.count))
         }
     }
 

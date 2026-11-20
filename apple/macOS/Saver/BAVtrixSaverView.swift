@@ -1,4 +1,4 @@
-﻿import AppKit
+import AppKit
 import ScreenSaver
 import SwiftUI
 import BAVtrixCore
@@ -24,8 +24,6 @@ final class BAVtrixSaverView: ScreenSaverView {
 
     private func setUp() {
         animationTimeInterval = 1.0 / 30.0
-        // The font is inside the saver bundle, not inside the host process.
-        RainNSView.resourceBundle = Bundle(for: BAVtrixSaverView.self)
         let view = RainNSView(frame: bounds)
         view.autoresizingMask = [.width, .height]
         view.drivesItself = false

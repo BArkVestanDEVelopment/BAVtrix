@@ -2,13 +2,12 @@ import UIKit
 import CoreText
 import BAVtrixCore
 
-/// Draws the rain with Core Text and advances the simulation from a display link.
+/// Draws the rain (own stroke-drawn glyphs, see GlyphAtlas) and advances the simulation from a display link.
 final class RainUIView: UIView {
     var config = RainConfig() {
         didSet {
             if config == oldValue { return }
             let layoutChanged = oldValue.glyphSize != config.glyphSize
-                || oldValue.charset != config.charset
                 || oldValue.specialStrings != config.specialStrings
             if layoutChanged {
                 rebuildFonts()
@@ -26,9 +25,8 @@ final class RainUIView: UIView {
     private var sim: RainSim?
     private var link: CADisplayLink?
     private var lastTimestamp: CFTimeInterval = 0
-    private var font: CTFont = CTFontCreateWithName("Menlo-Bold" as CFString, 14, nil)
+    private var atlas: GlyphAtlas?
     private var specialFont: CTFont = CTFontCreateWithName("Menlo" as CFString, 14, nil)
-    private var glyphs: [CGGlyph] = []
     private var specialGlyphs: [CGGlyph] = []
     private var cellW: CGFloat = 8
     private var cellH: CGFloat = 14
@@ -56,18 +54,6 @@ final class RainUIView: UIView {
 
     // MARK: Fonts, layout and picture
 
-    /// Loads the bundled Matrix Code Font (registered at runtime), falling back to Menlo.
-    private static func matrixFont(size: CGFloat) -> CTFont {
-        if let url = Bundle.main.url(forResource: "MatrixCodeFont", withExtension: "ttf") {
-            CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
-            if let descriptors = CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor],
-               let first = descriptors.first {
-                return CTFontCreateWithFontDescriptor(first, size, nil)
-            }
-        }
-        return CTFontCreateWithName("Menlo-Bold" as CFString, size, nil)
-    }
-
     private static func glyphs(for chars: [Character], in font: CTFont) -> [CGGlyph] {
         chars.map { ch in
             var utf16 = Array(String(ch).utf16)
@@ -77,25 +63,19 @@ final class RainUIView: UIView {
         }
     }
 
+    /// The cell size comes from the glyph size alone; the masks are redrawn for the screen scale.
     private func rebuildFonts() {
         let size = CGFloat(config.glyphSize)
-        font = RainUIView.matrixFont(size: size)
+        let scale = max(window?.screen.scale ?? contentScaleFactor, 1)
+        let cell = GlyphAtlas.cellSize(glyphSize: size)
+        cellW = cell.width
+        cellH = cell.height
+        atlas = GlyphAtlas(glyphSize: size, scale: scale)
+        // The few special glyphs (the greeting text) use the system monospaced font.
         specialFont = CTFontCreateWithName("Menlo" as CFString, size, nil)
-        glyphs = RainUIView.glyphs(for: config.charsetChars, in: font)
         specialGlyphs = RainUIView.glyphs(for: config.specialChars, in: specialFont)
-
-        var widest: CGFloat = 1
-        var g = glyphs
-        if !g.isEmpty {
-            var advances = [CGSize](repeating: .zero, count: g.count)
-            CTFontGetAdvancesForGlyphs(font, .horizontal, &g, &advances, g.count)
-            widest = advances.map { $0.width }.max() ?? 1
-        }
-        cellW = max(ceil(widest), 3)
-        ascent = CTFontGetAscent(font)
-        cellH = max(ceil(ascent + CTFontGetDescent(font)), 5)
+        ascent = CTFontGetAscent(specialFont)
     }
-
     private func rebuildSim() {
         guard bounds.width > 0, bounds.height > 0 else { return }
         let cols = Int(bounds.width / cellW)
@@ -124,6 +104,7 @@ final class RainUIView: UIView {
             link = l
             lastTimestamp = 0
             UIApplication.shared.isIdleTimerDisabled = true
+            rebuildFonts()
             reloadPicture()
         } else {
             link?.invalidate()
@@ -162,17 +143,22 @@ final class RainUIView: UIView {
                 }
                 lit += 1
                 let isSpecialGlyph = cell.flags & CellFlag.specialGlyph != 0
-                let table = isSpecialGlyph ? specialGlyphs : glyphs
                 let index = Int(cell.glyph)
-                guard index < table.count, table[index] != 0 else { continue }
-
                 ctx.setFillColor(red: CGFloat(c.r) / 255, green: CGFloat(c.g) / 255,
                                  blue: CGFloat(c.b) / 255, alpha: CGFloat(c.a) / 255)
-                var glyph = table[index]
-                // Baseline in y-up coordinates.
-                let baselineFromTop = y0 + CGFloat(row) * cellH + ascent
-                var position = CGPoint(x: x0 + CGFloat(col) * cellW, y: height - baselineFromTop)
-                CTFontDrawGlyphs(isSpecialGlyph ? specialFont : font, &glyph, &position, 1, ctx)
+                if isSpecialGlyph {
+                    guard index < specialGlyphs.count, specialGlyphs[index] != 0 else { continue }
+                    var glyph = specialGlyphs[index]
+                    // Baseline in y-up coordinates.
+                    let baselineFromTop = y0 + CGFloat(row) * cellH + ascent
+                    var position = CGPoint(x: x0 + CGFloat(col) * cellW, y: height - baselineFromTop)
+                    CTFontDrawGlyphs(specialFont, &glyph, &position, 1, ctx)
+                } else {
+                    guard let mask = atlas?.mask(index) else { continue }
+                    // y-up: the cell's bottom edge.
+                    let bottom = height - (y0 + CGFloat(row + 1) * cellH)
+                    ctx.draw(mask, in: CGRect(x: x0 + CGFloat(col) * cellW, y: bottom, width: cellW, height: cellH))
+                }
                 drawn += 1
             }
         }
@@ -278,11 +264,10 @@ final class RainUIView: UIView {
         }
 
         if UserDefaults.standard.bool(forKey: "debugOverlay") {
-            let fontName = CTFontCopyPostScriptName(font) as String
-            let usable = glyphs.filter { $0 != 0 }.count
+            let usable = atlas?.count ?? 0
             let text = "\(sim.cols)x\(sim.rows) cell \(cellW)x\(cellH) streams \(sim.streamCount) "
-                + "lit \(stats?.lit ?? 0) drawn \(stats?.drawn ?? 0) glyphs \(usable)/\(glyphs.count) "
-                + "font \(fontName) ticks \(ticks) picture \(pictureImage != nil) blend \(config.pictureBlend)"
+                + "lit \(stats?.lit ?? 0) drawn \(stats?.drawn ?? 0) glyphs \(usable) "
+                + "ticks \(ticks) picture \(pictureImage != nil) blend \(config.pictureBlend)"
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular),
                 .foregroundColor: UIColor.yellow,

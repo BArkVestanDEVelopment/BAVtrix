@@ -37,7 +37,6 @@ public struct RainConfig: Codable, Equatable {
     public var trailMin = 16
     /// 0 = automatic (grows with density).
     public var trailMax = 0
-    public var charset = "1234567890ABCDEFGHIJKLMNOPQRSUTVWXYZabcd"
     public var specialStrings = ["Welcome to BAVtrix"]
     public var fg = RGBA(187, 255, 187)
     public var fade = RGBA(0, 128, 0)
@@ -56,9 +55,6 @@ public struct RainConfig: Codable, Equatable {
     public var glyphSize: Float = 9
 
     public init() {}
-
-    /// Characters of the main character set.
-    public var charsetChars: [Character] { Array(charset) }
 
     /// Unique characters used by the special strings, in order of first use.
     public var specialChars: [Character] {
