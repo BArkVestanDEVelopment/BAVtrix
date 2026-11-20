@@ -126,7 +126,7 @@ class RainSim(val cols: Int, val rows: Int, initial: RainConfig, seed: Long) {
             slots[slot].len = len
             streams.add(
                 Stream(
-                    col, slot, head, len, speed, min(105 + 150 * depth, 255f).toInt(),
+                    col, slot, head, len, speed, min(45 + 210 * depth, 255f).toInt(),
                     specialIdx, specialStart,
                 ),
             )

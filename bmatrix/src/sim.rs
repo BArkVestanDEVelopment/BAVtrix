@@ -187,7 +187,7 @@ impl Sim {
                 head,
                 len,
                 speed,
-                shade: (105.0 + 150.0 * depth) as u8,
+                shade: (45.0 + 210.0 * depth) as u8,
                 acc: 0.0,
                 special,
                 owns_col: true,

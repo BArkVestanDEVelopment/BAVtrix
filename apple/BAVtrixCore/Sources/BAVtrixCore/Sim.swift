@@ -132,7 +132,7 @@ public final class RainSim {
             slots[Int(slot)] = Slot(head: head, len: len)
             streams.append(Stream(
                 col: col, slot: slot, head: head, len: len, speed: speed,
-                shade: UInt8(min(105 + 150 * depth, 255)), special: special))
+                shade: UInt8(min(45 + 210 * depth, 255)), special: special))
         }
     }
 
