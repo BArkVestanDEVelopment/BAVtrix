@@ -41,3 +41,8 @@ apple/shots-mac/
 apple/build-mac.log
 apple/build-saver.log
 apple/build-snapshot.log
+
+# Android signing material
+android/keystore.properties
+*.jks
+*.keystore
