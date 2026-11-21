@@ -66,7 +66,7 @@ public final class RainSim {
     }
 
     private func rebuildDerived() {
-        charsetCount = max(config.charsetChars.count, 1)
+        charsetCount = max(GlyphData.shapes.count, 1)
         specialIndexStrings = config.specialIndexStrings
     }
 

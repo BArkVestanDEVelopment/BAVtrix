@@ -27,7 +27,7 @@ final class SimTests: XCTestCase {
         run(sim, seconds: 15)
         for c in sim.cells where c.flags & CellFlag.on != 0 {
             XCTAssertLessThan(Int(c.sid), sim.slots.count)
-            XCTAssertLessThan(Int(c.glyph), max(sim.config.charsetChars.count, sim.config.specialChars.count))
+            XCTAssertLessThan(Int(c.glyph), max(GlyphData.shapes.count, sim.config.specialChars.count))
         }
     }
 
@@ -84,10 +84,10 @@ final class SimTests: XCTestCase {
     func testConfigRoundTripsThroughJSON() throws {
         var cfg = RainConfig()
         cfg.spawnRate = 0.77
-        cfg.specialStrings = ["BAVtrix", "wake up"]
+        cfg.specialStrings = ["BAVtrix", "hello world"]
         let data = try JSONEncoder().encode(cfg)
         let back = try JSONDecoder().decode(RainConfig.self, from: data)
         XCTAssertEqual(cfg, back)
-        XCTAssertEqual(back.specialChars.count, Set("BAVtrixwake up").count)
+        XCTAssertEqual(back.specialChars.count, Set("BAVtrixhello world").count)
     }
 }

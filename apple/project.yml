@@ -1,4 +1,4 @@
-﻿name: BAVtrix
+name: BAVtrix
 options:
   bundleIdPrefix: dev.barkvestan
   deploymentTarget:
@@ -13,6 +13,7 @@ targets:
     platform: iOS
     sources:
       - path: iOS
+      - path: ../legal/THIRD_PARTY_NOTICES.txt
     dependencies:
       - package: BAVtrixCore
     settings:
@@ -39,7 +40,6 @@ targets:
         excludes:
           - "Saver/**"
           - "SaverTool/**"
-      - path: iOS/MatrixCodeFont.ttf
     dependencies:
       - package: BAVtrixCore
     settings:
@@ -62,7 +62,6 @@ targets:
     sources:
       - path: macOS/Saver
       - path: macOS/RainNSView.swift
-      - path: iOS/MatrixCodeFont.ttf
     dependencies:
       - package: BAVtrixCore
       - sdk: ScreenSaver.framework

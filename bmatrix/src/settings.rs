@@ -1,4 +1,4 @@
-//! Settings dialog in the style of the original ZMatrix configuration window:
+//! Settings dialog with the tabs General, Cleanup, Colors, Background and Text:
 //! tabs General, Cleanup, Colors, Background and Text. Built from plain Win32 controls.
 
 use crate::atlas::wide;

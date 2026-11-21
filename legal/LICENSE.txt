@@ -1,0 +1,40 @@
+BAVtrix - Software License
+
+Copyright (c) 2026 BArkVestan Development. All rights reserved.
+
+1. Grant. BArkVestan Development ("we") grant you a personal, non-exclusive,
+   non-transferable, revocable licence to install and use BAVtrix (the "Software")
+   on devices that you own or control, for your own personal or internal use.
+
+2. Restrictions. You may not copy (except for backups and as the installation
+   requires), modify, translate, sublicense, sell, rent, lease or distribute the
+   Software or any part of it, and you may not reverse engineer, decompile or
+   disassemble it, except to the extent that applicable law allows this despite
+   this restriction. You may not remove or alter copyright or licence notices.
+
+3. Source code. Source code published in this repository is made visible for
+   reference only. No right to use, copy, modify or redistribute it is granted
+   except as stated in section 1.
+
+4. Third-party components. The Software contains third-party components (for
+   example fonts and libraries) that are licensed under their own terms. They are
+   listed in THIRD_PARTY_NOTICES.txt and in the "Licenses" screen of the apps. Nothing
+   in this licence restricts your rights under those terms.
+
+5. Ownership. The Software is licensed, not sold. We keep all rights that are not
+   expressly granted here.
+
+6. No warranty. The Software is provided "as is", without warranty of any kind,
+   express or implied, including merchantability, fitness for a particular purpose
+   and non-infringement.
+
+7. Limitation of liability. To the maximum extent permitted by law, we are not
+   liable for any indirect, incidental, special or consequential damages, or for
+   loss of data or profits, arising out of the use of or inability to use the
+   Software.
+
+8. Termination. This licence ends automatically if you break its terms. When it
+   ends you must stop using the Software and delete all copies of it.
+
+Distribution through an app store may additionally be governed by that store's
+standard end-user licence terms.

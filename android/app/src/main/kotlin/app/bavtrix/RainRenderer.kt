@@ -11,6 +11,7 @@ import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Shader
 import android.graphics.Typeface
+import app.bavtrix.core.GlyphData
 import app.bavtrix.core.CellFlag
 import app.bavtrix.core.Palette
 import app.bavtrix.core.depthLevel
@@ -23,11 +24,6 @@ import kotlin.math.max
 class RainRenderer(context: Context) {
     private val appContext = context.applicationContext
     private val density = context.resources.displayMetrics.density
-    private val matrixTypeface: Typeface = try {
-        Typeface.createFromAsset(context.assets, "MatrixCodeFont.ttf")
-    } catch (e: Exception) {
-        Typeface.MONOSPACE
-    }
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     private var sim: RainSim? = null
@@ -36,7 +32,7 @@ class RainRenderer(context: Context) {
     private var cellW = 8f
     private var cellH = 14f
     private var ascent = 11f
-    private var chars = CharArray(0)
+    private var glyphs: GlyphBitmaps? = null
     private var specialChars = CharArray(0)
 
     // The picture that shows through the glyphs (the desktop version's wallpaper effect).
@@ -48,7 +44,6 @@ class RainRenderer(context: Context) {
         set(value) {
             if (value == field) return
             val relayout = field.glyphSize != value.glyphSize ||
-                field.charset != value.charset ||
                 field.specialStrings != value.specialStrings
             val pictureChanged = field.usePicture != value.usePicture ||
                 field.pictureVersion != value.pictureVersion ||
@@ -68,16 +63,15 @@ class RainRenderer(context: Context) {
     }
 
     private fun rebuildMetrics() {
-        chars = config.charsetChars
         specialChars = config.specialChars
-        paint.typeface = matrixTypeface
+        val bitmaps = GlyphBitmaps(config.glyphSize * density)
+        glyphs = bitmaps
+        cellW = bitmaps.cellW.toFloat()
+        cellH = bitmaps.cellH.toFloat()
+        // The few special glyphs (the greeting text) use the system monospaced font.
+        paint.typeface = Typeface.MONOSPACE
         paint.textSize = config.glyphSize * density
-        var widest = 1f
-        for (c in chars) widest = max(widest, paint.measureText(c.toString()))
-        val m = paint.fontMetrics
-        cellW = max(ceil(widest), 4f)
-        ascent = -m.ascent
-        cellH = max(ceil(m.descent - m.ascent), 6f)
+        ascent = -paint.fontMetrics.ascent
     }
 
     private fun rebuildSim() {
@@ -167,10 +161,9 @@ class RainRenderer(context: Context) {
                 val color = Palette.color(s, idx, row)
                 if (color == Palette.NONE) continue
                 val special = s.flags[idx] and CellFlag.SPECIAL_GLYPH != 0
-                val table = if (special) specialChars else chars
                 val g = s.glyph[idx]
-                if (g >= table.size) continue
-                paint.typeface = if (special) Typeface.MONOSPACE else matrixTypeface
+                if (special && g >= specialChars.size) continue
+                if (!special && g >= GlyphData.shapes.size) continue
                 if (shader != null) {
                     // Copy: the cell's depth dims the picture (far streams and trail ends are darker).
                     val tint = if (config.pictureBlend == 0) {
@@ -183,7 +176,12 @@ class RainRenderer(context: Context) {
                     paint.colorFilter = null
                     paint.color = color
                 }
-                canvas.drawText(table, g, 1, x0 + col * cellW, y0 + row * cellH + ascent, paint)
+                if (special) {
+                    canvas.drawText(specialChars, g, 1, x0 + col * cellW, y0 + row * cellH + ascent, paint)
+                } else {
+                    val bmp = glyphs?.bitmaps?.get(g) ?: continue
+                    canvas.drawBitmap(bmp, x0 + col * cellW, y0 + row * cellH, paint)
+                }
             }
         }
         paint.shader = null
