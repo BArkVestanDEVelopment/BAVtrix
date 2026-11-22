@@ -1,6 +1,6 @@
 BAVtrix - third-party notices
 
-BAVtrix is Copyright (c) 2026 BArkVestan Development (see LICENSE). It contains the
+BAVtrix was developed by BArkVestan Development (see LICENSE). It contains the
 third-party components listed below. Each is used under its own licence, whose text
 follows the list.
 

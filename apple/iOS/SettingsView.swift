@@ -2,13 +2,13 @@ import SwiftUI
 import PhotosUI
 import BAVtrixCore
 
-private struct ColorPreset {
+struct ColorPreset {
     let name: String
     let fg: RGBA
     let fade: RGBA
 }
 
-private let presets: [ColorPreset] = [
+let presets: [ColorPreset] = [
     ColorPreset(name: "Green", fg: RGBA(187, 255, 187), fade: RGBA(0, 128, 0)),
     ColorPreset(name: "Blue", fg: RGBA(190, 225, 255), fade: RGBA(0, 90, 170)),
     ColorPreset(name: "Red", fg: RGBA(255, 205, 205), fade: RGBA(170, 0, 0)),
@@ -100,13 +100,22 @@ struct SettingsView: View {
                     .padding(.top, 18)
                     .padding(.horizontal, 4)
 
-                    Text("BAVtrix 1.0 · © 2026 BArkVestan Development")
+                    Text("BAVtrix 1.0 · © 2026 MIV ekonomi d.o.o.")
                         .font(Brand.font(12)).foregroundColor(Brand.text2)
                         .padding(.top, 10)
 
                     Button("Licenses") { showLicenses = true }
                         .buttonStyle(PillButtonStyle(glow: .soft))
                         .padding(.top, 4)
+
+                    // Opens the policy in the browser (no web view inside the app).
+                    Link(destination: URL(string: "https://barkvestandevelopment.party/bavtrix/apple/privacy")!) {
+                        Text("Privacy Policy")
+                            .font(Brand.font(15))
+                            .foregroundColor(Brand.green)
+                            .underline()
+                    }
+                    .padding(.top, 10)
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 22)
