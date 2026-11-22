@@ -2,9 +2,7 @@ package app.bavtrix
 
 import android.content.SharedPreferences
 import android.graphics.Canvas
-import android.os.Handler
-import android.os.Looper
-import android.os.SystemClock
+import android.view.Choreographer
 import android.service.wallpaper.WallpaperService
 import android.view.SurfaceHolder
 
@@ -14,22 +12,24 @@ class RainWallpaperService : WallpaperService() {
 
     private inner class RainEngine : Engine() {
         private val renderer = RainRenderer(this@RainWallpaperService)
-        private val handler = Handler(Looper.getMainLooper())
         private var visible = false
-        private var lastMs = 0L
+        private var lastNanos = 0L
 
         private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
             renderer.config = SettingsStore.load(this@RainWallpaperService)
         }
 
-        private val tick = object : Runnable {
-            override fun run() {
+        private val tick = object : Choreographer.FrameCallback {
+            override fun doFrame(frameTimeNanos: Long) {
                 if (!visible) return
-                val now = SystemClock.uptimeMillis()
-                if (lastMs != 0L) renderer.advance((now - lastMs).coerceIn(1L, 250L).toFloat())
-                lastMs = now
+                Choreographer.getInstance().postFrameCallback(this)
+                // 60 frames per second at most, even on 90/120 Hz displays.
+                if (lastNanos != 0L && frameTimeNanos - lastNanos < 15_000_000L) return
+                if (lastNanos != 0L) {
+                    renderer.advance(((frameTimeNanos - lastNanos) / 1_000_000f).coerceIn(1f, 250f))
+                }
+                lastNanos = frameTimeNanos
                 drawFrame()
-                handler.postDelayed(this, 33)
             }
         }
 
@@ -41,7 +41,7 @@ class RainWallpaperService : WallpaperService() {
 
         override fun onDestroy() {
             visible = false
-            handler.removeCallbacks(tick)
+            Choreographer.getInstance().removeFrameCallback(tick)
             SettingsStore.prefs(this@RainWallpaperService).unregisterOnSharedPreferenceChangeListener(prefsListener)
             super.onDestroy()
         }
@@ -53,10 +53,10 @@ class RainWallpaperService : WallpaperService() {
 
         override fun onVisibilityChanged(visible: Boolean) {
             this.visible = visible
-            handler.removeCallbacks(tick)
+            Choreographer.getInstance().removeFrameCallback(tick)
             if (visible) {
-                lastMs = 0L
-                handler.post(tick)
+                lastNanos = 0L
+                Choreographer.getInstance().postFrameCallback(tick)
             }
         }
 

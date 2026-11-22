@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
@@ -93,7 +94,7 @@ private fun SettingsScreen() {
     }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 22.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = (LocalConfiguration.current.screenWidthDp / 20).coerceIn(14, 48).dp, vertical = 22.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         GlowTitle(stringResource(R.string.settings))
