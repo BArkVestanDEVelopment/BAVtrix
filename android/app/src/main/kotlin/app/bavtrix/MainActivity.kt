@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Button
@@ -45,7 +46,7 @@ class MainActivity : ComponentActivity() {
                     val buttonPad = (maxWidth.value / 90f).coerceIn(3f, 10f).dp
                     AndroidView(factory = { RainView(it) }, modifier = Modifier.fillMaxSize())
                     Row(
-                        modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 12.dp, vertical = 20.dp),
+                        modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().fillMaxWidth().padding(horizontal = 12.dp, vertical = 20.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         NeonButton(onClick = { setAsLiveWallpaper(context) }, modifier = Modifier.weight(1f), contentPadding = PaddingValues(horizontal = buttonPad, vertical = 12.dp)) {
