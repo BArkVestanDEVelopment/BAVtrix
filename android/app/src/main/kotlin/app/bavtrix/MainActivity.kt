@@ -6,11 +6,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -34,17 +35,28 @@ class MainActivity : ComponentActivity() {
                 val context = LocalContext.current
                 Box(Modifier.fillMaxSize()) {
                     AndroidView(factory = { RainView(it) }, modifier = Modifier.fillMaxSize())
-                    Row(
+                    Column(
                         modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         NeonButton(onClick = { setAsLiveWallpaper(context) }) { Text(stringResource(R.string.live_wallpaper)) }
+                        NeonButton(onClick = { openScreensaverSettings(context) }) { Text(stringResource(R.string.screensaver)) }
                         NeonButton(onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) }) {
                             Text(stringResource(R.string.settings))
                         }
                     }
                 }
             }
+        }
+    }
+
+    /** Opens the system screensaver (daydream) settings, where BAVtrix is one of the choices. */
+    private fun openScreensaverSettings(context: Context) {
+        try {
+            context.startActivity(Intent(Settings.ACTION_DREAM_SETTINGS))
+        } catch (e: ActivityNotFoundException) {
+            context.startActivity(Intent(Settings.ACTION_DISPLAY_SETTINGS))
         }
     }
 

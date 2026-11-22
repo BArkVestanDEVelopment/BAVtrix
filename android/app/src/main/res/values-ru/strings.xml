@@ -3,6 +3,7 @@
     <string name="app_name">BAVtrix</string>
     <string name="wallpaper_description">Цифровой дождь на главном экране и экране блокировки</string>
     <string name="live_wallpaper">Живые обои</string>
+    <string name="screensaver">Заставка</string>
     <string name="settings">Настройки</string>
     <string name="tagline">BAVtrix · цифровой дождь</string>
     <string name="sec_rain">Дождь</string>
