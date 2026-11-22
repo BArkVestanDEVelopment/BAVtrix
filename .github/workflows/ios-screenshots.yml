@@ -1,8 +1,11 @@
 name: iOS store screenshots
 
-# App Store screenshots from explicit simulators (6.9" and 6.5" iPhones). Manual run only.
+# App Store screenshots from explicit simulators (6.9" and 6.5" iPhones). Manual run or a `shots-v*` tag.
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "shots-v*"
 
 jobs:
   screenshots:
