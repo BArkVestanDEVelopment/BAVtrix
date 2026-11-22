@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BAVtrix</string>
+    <string name="wallpaper_description">Цифровой дождь на главном экране и экране блокировки</string>
+    <string name="live_wallpaper">Живые обои</string>
+    <string name="settings">Настройки</string>
+    <string name="tagline">BAVtrix · цифровой дождь</string>
+    <string name="sec_rain">Дождь</string>
+    <string name="density">Плотность</string>
+    <string name="speed_variance">Разброс скоростей</string>
+    <string name="step_ms">Время шага, мс</string>
+    <string name="glyph_size">Размер символов</string>
+    <string name="special_text">Спецстрока</string>
+    <string name="sec_trail">Шлейф</string>
+    <string name="trail_min">Мин. длина</string>
+    <string name="trail_max">Макс. длина (0 = авто)</string>
+    <string name="sec_flicker">Мерцание</string>
+    <string name="flicker_trail">Символы в шлейфе</string>
+    <string name="flicker_head">Голова потока</string>
+    <string name="head_brightness">Яркость головы</string>
+    <string name="sec_picture">Картинка сквозь символы</string>
+    <string name="picture_hint">Выбранная картинка проступает через символы дождя, как обои рабочего стола на компьютере.</string>
+    <string name="show_picture">Показывать картинку</string>
+    <string name="blend">Смешивание</string>
+    <string name="blend_hint">Copy: символы показывают саму картинку. OR: к картинке добавляется цвет шлейфа. AND: картинка окрашивается цветом шлейфа.</string>
+    <string name="fill_screen">Заполнить весь экран (обрезать)</string>
+    <string name="pick_picture">Выбрать картинку</string>
+    <string name="remove">Убрать</string>
+    <string name="sec_color">Цвет</string>
+    <string name="reset">Сбросить</string>
+    <string name="done">Готово</string>
+    <string name="licenses">Лицензии</string>
+    <string name="privacy">Политика конфиденциальности</string>
+    <string name="close">Закрыть</string>
+    <string name="color_green">Зелёный</string>
+    <string name="color_blue">Синий</string>
+    <string name="color_red">Красный</string>
+    <string name="color_amber">Янтарный</string>
+    <string name="color_violet">Фиолетовый</string>
+    <string name="color_white">Белый</string>
+</resources>

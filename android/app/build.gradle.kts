@@ -6,29 +6,33 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-// Upload key for store builds: android/keystore.properties (never committed) with
-// storeFile, storePassword, keyAlias, keyPassword. Without it the release build stays unsigned.
-val keystoreFile = rootProject.file("keystore.properties")
+// Upload key for store builds. The path of a properties file (storeFile, storePassword, keyAlias,
+// keyPassword; kept outside the repository) comes from the BAVTRIX_KEYSTORE_PROPS environment
+// variable or from `bavtrix.keystoreProps` in android/local.properties. Without it the release
+// build stays unsigned.
 val keystoreProps = Properties().apply {
-    if (keystoreFile.exists()) keystoreFile.inputStream().use { load(it) }
+    val local = Properties()
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { local.load(it) }
+    val path = System.getenv("BAVTRIX_KEYSTORE_PROPS") ?: local.getProperty("bavtrix.keystoreProps")
+    if (path != null && file(path).exists()) file(path).inputStream().use { load(it) }
 }
 
 android {
     namespace = "app.bavtrix"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.bavtrix"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
     }
 
     signingConfigs {
-        if (keystoreFile.exists()) {
+        if (keystoreProps.getProperty("storeFile") != null) {
             create("upload") {
-                storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
+                storeFile = file(keystoreProps.getProperty("storeFile"))
                 storePassword = keystoreProps.getProperty("storePassword")
                 keyAlias = keystoreProps.getProperty("keyAlias")
                 keyPassword = keystoreProps.getProperty("keyPassword")
@@ -41,7 +45,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            if (keystoreFile.exists()) signingConfig = signingConfigs.getByName("upload")
+            signingConfigs.findByName("upload")?.let { signingConfig = it }
         }
     }
     compileOptions {

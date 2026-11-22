@@ -1,12 +1,17 @@
 package app.bavtrix
 
+import android.content.ActivityNotFoundException
+import androidx.annotation.StringRes
+import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,19 +40,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import app.bavtrix.core.RainConfig
 import app.bavtrix.core.Rgba
 
-private class ColorPreset(val name: String, val fg: Rgba, val fade: Rgba)
+private class ColorPreset(@StringRes val nameRes: Int, val fg: Rgba, val fade: Rgba)
 
 private val presets = listOf(
-    ColorPreset("Зелёный", Rgba(187, 255, 187), Rgba(0, 128, 0)),
-    ColorPreset("Синий", Rgba(190, 225, 255), Rgba(0, 90, 170)),
-    ColorPreset("Красный", Rgba(255, 205, 205), Rgba(170, 0, 0)),
-    ColorPreset("Янтарный", Rgba(255, 240, 190), Rgba(190, 120, 0)),
-    ColorPreset("Фиолетовый", Rgba(230, 205, 255), Rgba(110, 0, 170)),
-    ColorPreset("Белый", Rgba(255, 255, 255), Rgba(120, 120, 120)),
+    ColorPreset(R.string.color_green, Rgba(187, 255, 187), Rgba(0, 128, 0)),
+    ColorPreset(R.string.color_blue, Rgba(190, 225, 255), Rgba(0, 90, 170)),
+    ColorPreset(R.string.color_red, Rgba(255, 205, 205), Rgba(170, 0, 0)),
+    ColorPreset(R.string.color_amber, Rgba(255, 240, 190), Rgba(190, 120, 0)),
+    ColorPreset(R.string.color_violet, Rgba(230, 205, 255), Rgba(110, 0, 170)),
+    ColorPreset(R.string.color_white, Rgba(255, 255, 255), Rgba(120, 120, 120)),
 )
 
 class SettingsActivity : ComponentActivity() {
@@ -89,68 +96,68 @@ private fun SettingsScreen() {
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 22.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        GlowTitle("Настройки")
-        Text("BAVtrix · цифровой дождь", color = Brand.Text2, modifier = Modifier.padding(start = 2.dp))
+        GlowTitle(stringResource(R.string.settings))
+        Text(stringResource(R.string.tagline), color = Brand.Text2, modifier = Modifier.padding(start = 2.dp))
 
-        SectionTitle("Дождь")
+        SectionTitle(stringResource(R.string.sec_rain))
         NeonCard {
-            SliderRow("Плотность", cfg.spawnRate * 100, 5f..97f, { "%.0f%%".format(it) }) { update(cfg.copy(spawnRate = it / 100)) }
-            SliderRow("Разброс скоростей", cfg.speedVariance, 1f..20f, { "%.0f".format(it) }) { update(cfg.copy(speedVariance = it)) }
-            SliderRow("Время шага, мс", cfg.refreshMs, 10f..300f, { "%.0f".format(it) }) { update(cfg.copy(refreshMs = it)) }
-            SliderRow("Размер символов", cfg.glyphSize, 5f..30f, { "%.0f dp".format(it) }) { update(cfg.copy(glyphSize = it)) }
-            SliderRow("Спецстрока", cfg.specialProbability * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(specialProbability = it / 100)) }
+            SliderRow(stringResource(R.string.density), cfg.spawnRate * 100, 5f..97f, { "%.0f%%".format(it) }) { update(cfg.copy(spawnRate = it / 100)) }
+            SliderRow(stringResource(R.string.speed_variance), cfg.speedVariance, 1f..20f, { "%.0f".format(it) }) { update(cfg.copy(speedVariance = it)) }
+            SliderRow(stringResource(R.string.step_ms), cfg.refreshMs, 10f..300f, { "%.0f".format(it) }) { update(cfg.copy(refreshMs = it)) }
+            SliderRow(stringResource(R.string.glyph_size), cfg.glyphSize, 5f..30f, { "%.0f dp".format(it) }) { update(cfg.copy(glyphSize = it)) }
+            SliderRow(stringResource(R.string.special_text), cfg.specialProbability * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(specialProbability = it / 100)) }
         }
 
-        SectionTitle("Шлейф")
+        SectionTitle(stringResource(R.string.sec_trail))
         NeonCard {
-            SliderRow("Мин. длина", cfg.trailMin.toFloat(), 2f..100f, { "%.0f".format(it) }) { update(cfg.copy(trailMin = it.toInt())) }
-            SliderRow("Макс. длина (0 = авто)", cfg.trailMax.toFloat(), 0f..200f, { "%.0f".format(it) }) { update(cfg.copy(trailMax = it.toInt())) }
+            SliderRow(stringResource(R.string.trail_min), cfg.trailMin.toFloat(), 2f..100f, { "%.0f".format(it) }) { update(cfg.copy(trailMin = it.toInt())) }
+            SliderRow(stringResource(R.string.trail_max), cfg.trailMax.toFloat(), 0f..200f, { "%.0f".format(it) }) { update(cfg.copy(trailMax = it.toInt())) }
         }
 
-        SectionTitle("Мерцание")
+        SectionTitle(stringResource(R.string.sec_flicker))
         NeonCard {
-            SliderRow("Символы в шлейфе", cfg.flicker * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(flicker = it / 100)) }
-            SliderRow("Голова потока", cfg.headFlicker * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(headFlicker = it / 100)) }
-            SliderRow("Яркость головы", cfg.headBrightness * 100, 50f..200f, { "%.0f%%".format(it) }) { update(cfg.copy(headBrightness = it / 100)) }
+            SliderRow(stringResource(R.string.flicker_trail), cfg.flicker * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(flicker = it / 100)) }
+            SliderRow(stringResource(R.string.flicker_head), cfg.headFlicker * 100, 0f..100f, { "%.0f%%".format(it) }) { update(cfg.copy(headFlicker = it / 100)) }
+            SliderRow(stringResource(R.string.head_brightness), cfg.headBrightness * 100, 50f..200f, { "%.0f%%".format(it) }) { update(cfg.copy(headBrightness = it / 100)) }
         }
 
-        SectionTitle("Картинка сквозь символы")
+        SectionTitle(stringResource(R.string.sec_picture))
         NeonCard {
             Text(
-                "Выбранная картинка проступает через символы дождя, как обои рабочего стола на компьютере.",
+                stringResource(R.string.picture_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = Brand.Text2,
             )
-            SwitchRow("Показывать картинку", cfg.usePicture) {
+            SwitchRow(stringResource(R.string.show_picture), cfg.usePicture) {
                 update(cfg.copy(usePicture = it, pictureVersion = cfg.pictureVersion + 1))
             }
-            Text("Смешивание", color = Brand.Text, modifier = Modifier.padding(top = 4.dp))
+            Text(stringResource(R.string.blend), color = Brand.Text, modifier = Modifier.padding(top = 4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Copy" to 0, "OR" to 1, "AND" to 2).forEach { (name, mode) ->
                     BrandChip(name, cfg.pictureBlend == mode) { update(cfg.copy(pictureBlend = mode)) }
                 }
             }
             Text(
-                "Copy: символы показывают саму картинку. OR: к картинке добавляется цвет шлейфа. AND: картинка окрашивается цветом шлейфа.",
+                stringResource(R.string.blend_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = Brand.Text2,
             )
-            SwitchRow("Заполнить весь экран (обрезать)", cfg.pictureCover) { update(cfg.copy(pictureCover = it)) }
+            SwitchRow(stringResource(R.string.fill_screen), cfg.pictureCover) { update(cfg.copy(pictureCover = it)) }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 6.dp)) {
-                NeonButton(onClick = { pickPicture.launch("image/*") }) { Text("Выбрать картинку") }
+                NeonButton(onClick = { pickPicture.launch("image/*") }) { Text(stringResource(R.string.pick_picture)) }
                 NeonOutlinedButton(onClick = {
                     PictureStore.delete(context)
                     update(cfg.copy(usePicture = false, pictureVersion = cfg.pictureVersion + 1))
-                }) { Text("Убрать") }
+                }) { Text(stringResource(R.string.remove)) }
             }
         }
 
-        SectionTitle("Цвет")
+        SectionTitle(stringResource(R.string.sec_color))
         NeonCard {
             presets.chunked(3).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     row.forEach { p ->
-                        BrandChip(p.name, cfg.fade == p.fade && cfg.fg == p.fg) { update(cfg.copy(fg = p.fg, fade = p.fade)) }
+                        BrandChip(stringResource(p.nameRes), cfg.fade == p.fade && cfg.fg == p.fg) { update(cfg.copy(fg = p.fg, fade = p.fade)) }
                     }
                 }
             }
@@ -163,9 +170,9 @@ private fun SettingsScreen() {
                     cfg = RainConfig()
                 },
                 danger = true,
-            ) { Text("Сбросить") }
+            ) { Text(stringResource(R.string.reset)) }
             NeonButton(onClick = { (context as? ComponentActivity)?.finish() }, modifier = Modifier.weight(1f)) {
-                Text("Готово")
+                Text(stringResource(R.string.done))
             }
         }
         Text(
@@ -175,11 +182,28 @@ private fun SettingsScreen() {
             modifier = Modifier.padding(top = 10.dp),
         )
         var showLicenses by remember { mutableStateOf(false) }
-        NeonOutlinedButton(onClick = { showLicenses = true }, modifier = Modifier.padding(top = 8.dp)) { Text("Лицензии") }
+        NeonOutlinedButton(onClick = { showLicenses = true }, modifier = Modifier.padding(top = 8.dp)) {
+            Text(stringResource(R.string.licenses))
+        }
         if (showLicenses) LicensesDialog { showLicenses = false }
+        Text(
+            stringResource(R.string.privacy),
+            style = MaterialTheme.typography.bodyMedium,
+            color = Brand.Green,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier
+                .padding(top = 10.dp)
+                .clickable {
+                    try {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    } catch (_: ActivityNotFoundException) {
+                    }
+                },
+        )
     }
 }
-
 /** The licence texts of the third-party components, read from the app's assets. */
 @Composable
 private fun LicensesDialog(onDismiss: () -> Unit) {
@@ -190,8 +214,8 @@ private fun LicensesDialog(onDismiss: () -> Unit) {
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Закрыть") } },
-        title = { Text("Лицензии") },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
+        title = { Text(stringResource(R.string.licenses)) },
         text = { Column(Modifier.verticalScroll(rememberScrollState())) { Text(text, style = MaterialTheme.typography.bodySmall) } },
     )
 }
@@ -242,3 +266,5 @@ private fun SliderRow(
         Slider(value = value.coerceIn(range), onValueChange = onChange, valueRange = range, colors = brandSliderColors())
     }
 }
+
+private const val PRIVACY_URL = "https://barkvestandevelopment.party/bavtrix/privacy"

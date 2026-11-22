@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
@@ -37,9 +38,9 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        NeonButton(onClick = { setAsLiveWallpaper(context) }) { Text("Живые обои") }
+                        NeonButton(onClick = { setAsLiveWallpaper(context) }) { Text(stringResource(R.string.live_wallpaper)) }
                         NeonButton(onClick = { context.startActivity(Intent(context, SettingsActivity::class.java)) }) {
-                            Text("Настройки")
+                            Text(stringResource(R.string.settings))
                         }
                     }
                 }
