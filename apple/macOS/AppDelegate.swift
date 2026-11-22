@@ -88,13 +88,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item.button?.title = "B"
         let menu = NSMenu()
         menu.delegate = self
-        menu.addItem(withTitle: "Настройки…", action: #selector(openSettings), keyEquivalent: ",").target = self
-        let cover = menu.addItem(withTitle: "Скрывать значки рабочего стола", action: #selector(toggleCover), keyEquivalent: "")
+        menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
+        let cover = menu.addItem(withTitle: "Hide desktop icons", action: #selector(toggleCover), keyEquivalent: "")
         cover.target = self
-        let login = menu.addItem(withTitle: "Запускать при входе", action: #selector(toggleLogin), keyEquivalent: "")
+        let login = menu.addItem(withTitle: "Launch at login", action: #selector(toggleLogin), keyEquivalent: "")
         login.target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Выход", action: #selector(quit), keyEquivalent: "q").target = self
+        menu.addItem(withTitle: "Quit", action: #selector(quit), keyEquivalent: "q").target = self
         item.menu = menu
         statusItem = item
         coverItem = cover
@@ -122,7 +122,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if settingsWindow == nil {
             let host = NSHostingController(rootView: MacSettingsView(store: settings))
             let window = NSWindow(contentViewController: host)
-            window.title = "BAVtrix — настройки"
+            window.title = "BAVtrix Settings"
             window.styleMask = [.titled, .closable, .miniaturizable]
             window.isReleasedWhenClosed = false
             window.center()

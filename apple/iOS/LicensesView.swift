@@ -22,11 +22,11 @@ struct LicensesView: View {
                     .padding()
                     .textSelection(.enabled)
             }
-            .navigationTitle("Лицензии")
+            .navigationTitle("Licenses")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Готово") { dismiss() }
+                    Button("Done") { dismiss() }
                 }
             }
         }
