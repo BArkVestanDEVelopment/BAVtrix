@@ -1,5 +1,7 @@
-// Generates a neutral abstract gradient picture (1600 x 2400 PNG) for the App Store screenshots.
-// Our own artwork, no photos and no third-party material.
+// Generates the picture for the App Store screenshots (1600 x 2400 PNG): a large glowing moon over
+// three layered mountain ridges, bright shapes on pure black. Black stays free of rain, so the
+// shapes must be bright and high-contrast to read through the glyphs. Our own artwork: no photos,
+// no text, no third-party material.
 //   swift apple/ci/make-store-picture.swift out.png
 import CoreGraphics
 import Foundation
@@ -22,40 +24,56 @@ func color(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> CGColo
     CGColor(colorSpace: space, components: [r, g, b, a])!
 }
 
-// Deep vertical base: night blue, teal, violet.
-let base = CGGradient(
+/// y measured from the top of the picture (Core Graphics itself counts from the bottom).
+func flipped(_ y: CGFloat) -> CGFloat { CGFloat(height) - y }
+
+// Pure black background.
+ctx.setFillColor(color(0, 0, 0))
+ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+// The moon: a soft halo, then a bright disc with a warm rim.
+let moon = CGPoint(x: 800, y: flipped(860))
+let halo = CGGradient(
     colorsSpace: space,
-    colors: [color(0.02, 0.03, 0.14), color(0.04, 0.26, 0.36), color(0.34, 0.10, 0.46)] as CFArray,
-    locations: [0, 0.55, 1])!
-ctx.drawLinearGradient(base, start: CGPoint(x: 0, y: CGFloat(height)), end: .zero, options: [])
-
-// Soft glowing blobs.
-let blobs: [(x: CGFloat, y: CGFloat, r: CGFloat, c: (CGFloat, CGFloat, CGFloat))] = [
-    (380, 1950, 900, (0.00, 0.90, 0.80)),
-    (1280, 1520, 820, (1.00, 0.35, 0.60)),
-    (520, 940, 880, (1.00, 0.75, 0.20)),
-    (1180, 460, 920, (0.30, 0.50, 1.00)),
-    (800, 1230, 520, (0.90, 1.00, 0.92)),
-]
-for blob in blobs {
-    let glow = CGGradient(
-        colorsSpace: space,
-        colors: [color(blob.c.0, blob.c.1, blob.c.2, 0.95), color(blob.c.0, blob.c.1, blob.c.2, 0)] as CFArray,
-        locations: [0, 1])!
-    let centre = CGPoint(x: blob.x, y: blob.y)
-    ctx.drawRadialGradient(glow, startCenter: centre, startRadius: 0, endCenter: centre, endRadius: blob.r, options: [])
-}
-
-// A few faint diagonal bands give the picture some structure.
+    colors: [color(1.0, 0.95, 0.75, 0.55), color(1.0, 0.85, 0.45, 0.22), color(1.0, 0.7, 0.3, 0)] as CFArray,
+    locations: [0, 0.45, 1])!
+ctx.drawRadialGradient(halo, startCenter: moon, startRadius: 380, endCenter: moon, endRadius: 820, options: [])
+let disc = CGGradient(
+    colorsSpace: space,
+    colors: [color(1.0, 1.0, 0.96), color(1.0, 0.97, 0.82), color(1.0, 0.82, 0.45)] as CFArray,
+    locations: [0, 0.7, 1])!
 ctx.saveGState()
-ctx.translateBy(x: CGFloat(width) / 2, y: CGFloat(height) / 2)
-ctx.rotate(by: -0.45)
-for i in -4...4 {
-    let y = CGFloat(i) * 330
-    ctx.setFillColor(color(1, 1, 1, i % 2 == 0 ? 0.10 : 0.05))
-    ctx.fill(CGRect(x: -2400, y: y, width: 4800, height: 120))
-}
+ctx.addEllipse(in: CGRect(x: moon.x - 470, y: moon.y - 470, width: 940, height: 940))
+ctx.clip()
+ctx.drawRadialGradient(disc, startCenter: moon, startRadius: 0, endCenter: moon, endRadius: 470, options: [])
 ctx.restoreGState()
+
+/// One mountain layer: the ridge line (x, y from the top), filled from a bright top to a dark base.
+func ridge(_ points: [(CGFloat, CGFloat)], top: CGColor, bottom: CGColor, from: CGFloat, to: CGFloat) {
+    let path = CGMutablePath()
+    path.move(to: CGPoint(x: 0, y: 0))
+    for p in points { path.addLine(to: CGPoint(x: p.0, y: flipped(p.1))) }
+    path.addLine(to: CGPoint(x: CGFloat(width), y: 0))
+    path.closeSubpath()
+    ctx.saveGState()
+    ctx.addPath(path)
+    ctx.clip()
+    let fill = CGGradient(colorsSpace: space, colors: [top, bottom] as CFArray, locations: [0, 1])!
+    ctx.drawLinearGradient(fill, start: CGPoint(x: 0, y: flipped(from)), end: CGPoint(x: 0, y: flipped(to)), options: [])
+    ctx.restoreGState()
+    // A black outline separates the layers.
+    ctx.addPath(path)
+    ctx.setStrokeColor(color(0, 0, 0))
+    ctx.setLineWidth(14)
+    ctx.strokePath()
+}
+
+ridge([(0, 1560), (240, 1400), (520, 1620), (800, 1330), (1100, 1600), (1350, 1450), (1600, 1640)],
+      top: color(0.82, 0.55, 1.0), bottom: color(0.30, 0.10, 0.55), from: 1330, to: 2400)
+ridge([(0, 1880), (300, 1720), (620, 1940), (960, 1690), (1260, 1920), (1600, 1760)],
+      top: color(1.0, 0.55, 0.45), bottom: color(0.55, 0.15, 0.30), from: 1690, to: 2400)
+ridge([(0, 2160), (360, 2000), (720, 2220), (1060, 1980), (1400, 2200), (1600, 2090)],
+      top: color(0.25, 1.0, 0.85), bottom: color(0.05, 0.35, 0.35), from: 1980, to: 2400)
 
 guard let image = ctx.makeImage(),
       let destination = CGImageDestinationCreateWithURL(
