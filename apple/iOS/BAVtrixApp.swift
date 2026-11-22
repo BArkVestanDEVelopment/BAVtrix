@@ -27,11 +27,11 @@ struct ContentView: View {
             Button {
                 showSettings = true
             } label: {
-                Text("Настройки").glassPill()
+                Text("Settings").glassPill()
             }
             .opacity(0.85)
             .padding(20)
-            .accessibilityLabel("Настройки")
+            .accessibilityLabel("Settings")
         }
         .sheet(isPresented: $showSettings) {
             SettingsView().environmentObject(store)

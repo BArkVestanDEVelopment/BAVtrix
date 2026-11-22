@@ -65,7 +65,7 @@ class RainSim(val cols: Int, val rows: Int, initial: RainConfig, seed: Long) {
     val streamCount: Int get() = streams.size
 
     private fun rebuildDerived() {
-        charsetCount = max(config.charsetChars.size, 1)
+        charsetCount = max(GlyphData.shapes.size, 1)
         specialStrings = config.specialIndexStrings
     }
 

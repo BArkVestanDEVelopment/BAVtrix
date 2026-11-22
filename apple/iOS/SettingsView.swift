@@ -2,76 +2,77 @@ import SwiftUI
 import PhotosUI
 import BAVtrixCore
 
-private struct ColorPreset {
+struct ColorPreset {
     let name: String
     let fg: RGBA
     let fade: RGBA
 }
 
-private let presets: [ColorPreset] = [
-    ColorPreset(name: "Зелёный", fg: RGBA(187, 255, 187), fade: RGBA(0, 128, 0)),
-    ColorPreset(name: "Синий", fg: RGBA(190, 225, 255), fade: RGBA(0, 90, 170)),
-    ColorPreset(name: "Красный", fg: RGBA(255, 205, 205), fade: RGBA(170, 0, 0)),
-    ColorPreset(name: "Янтарный", fg: RGBA(255, 240, 190), fade: RGBA(190, 120, 0)),
-    ColorPreset(name: "Фиолетовый", fg: RGBA(230, 205, 255), fade: RGBA(110, 0, 170)),
-    ColorPreset(name: "Белый", fg: RGBA(255, 255, 255), fade: RGBA(120, 120, 120)),
+let presets: [ColorPreset] = [
+    ColorPreset(name: "Green", fg: RGBA(187, 255, 187), fade: RGBA(0, 128, 0)),
+    ColorPreset(name: "Blue", fg: RGBA(190, 225, 255), fade: RGBA(0, 90, 170)),
+    ColorPreset(name: "Red", fg: RGBA(255, 205, 205), fade: RGBA(170, 0, 0)),
+    ColorPreset(name: "Amber", fg: RGBA(255, 240, 190), fade: RGBA(190, 120, 0)),
+    ColorPreset(name: "Violet", fg: RGBA(230, 205, 255), fade: RGBA(110, 0, 170)),
+    ColorPreset(name: "White", fg: RGBA(255, 255, 255), fade: RGBA(120, 120, 120)),
 ]
 
 struct SettingsView: View {
     @EnvironmentObject var store: SettingsStore
     @Environment(\.dismiss) private var dismiss
     @State private var pickerItem: PhotosPickerItem?
+    @State private var showLicenses = false
 
     var body: some View {
         ZStack {
             Brand.bg.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Настройки").font(Brand.font(30, .bold)).foregroundColor(Brand.text)
-                    Text("BAVtrix · матричный дождь").font(Brand.font(15)).foregroundColor(Brand.text2)
+                    Text("Settings").font(Brand.font(30, .bold)).foregroundColor(Brand.text)
+                    Text("BAVtrix · digital rain").font(Brand.font(15)).foregroundColor(Brand.text2)
 
-                    SectionTitle("Дождь")
+                    SectionTitle("Rain")
                     NeonCard {
-                        slider("Плотность", value: floatBinding(\.spawnRate), range: 0.05...0.97, format: "%.0f%%", scale: 100)
-                        slider("Разброс скоростей", value: floatBinding(\.speedVariance), range: 1...20, format: "%.0f", scale: 1)
-                        slider("Время шага, мс", value: floatBinding(\.refreshMs), range: 10...300, format: "%.0f", scale: 1)
-                        slider("Размер символов", value: floatBinding(\.glyphSize), range: 5...30, format: "%.0f pt", scale: 1)
-                        slider("Спецстрока", value: floatBinding(\.specialProbability), range: 0...1, format: "%.0f%%", scale: 100)
+                        slider("Density", value: floatBinding(\.spawnRate), range: 0.05...0.97, format: "%.0f%%", scale: 100)
+                        slider("Speed variance", value: floatBinding(\.speedVariance), range: 1...20, format: "%.0f", scale: 1)
+                        slider("Step time, ms", value: floatBinding(\.refreshMs), range: 10...300, format: "%.0f", scale: 1)
+                        slider("Symbol size", value: floatBinding(\.glyphSize), range: 5...30, format: "%.0f pt", scale: 1)
+                        slider("Special text", value: floatBinding(\.specialProbability), range: 0...1, format: "%.0f%%", scale: 100)
                     }
 
-                    SectionTitle("Шлейф")
+                    SectionTitle("Trail")
                     NeonCard {
-                        stepper("Мин. длина шлейфа", value: intBinding(\.trailMin), range: 2...200)
-                        stepper("Макс. длина (0 = авто)", value: intBinding(\.trailMax), range: 0...300)
+                        stepper("Min. trail length", value: intBinding(\.trailMin), range: 2...200)
+                        stepper("Max. length (0 = auto)", value: intBinding(\.trailMax), range: 0...300)
                     }
 
-                    SectionTitle("Мерцание")
+                    SectionTitle("Flicker")
                     NeonCard {
-                        slider("Символы в шлейфе", value: floatBinding(\.flicker), range: 0...1, format: "%.0f%%", scale: 100)
-                        slider("Голова потока", value: floatBinding(\.headFlicker), range: 0...1, format: "%.0f%%", scale: 100)
-                        slider("Яркость головы", value: floatBinding(\.headBrightness), range: 0.5...2, format: "%.0f%%", scale: 100)
+                        slider("Symbols in the trail", value: floatBinding(\.flicker), range: 0...1, format: "%.0f%%", scale: 100)
+                        slider("Stream head", value: floatBinding(\.headFlicker), range: 0...1, format: "%.0f%%", scale: 100)
+                        slider("Head brightness", value: floatBinding(\.headBrightness), range: 0.5...2, format: "%.0f%%", scale: 100)
                     }
 
-                    SectionTitle("Картинка сквозь символы")
+                    SectionTitle("Picture through the symbols")
                     NeonCard {
-                        note("Выбранная картинка проступает через символы дождя, чёрное остаётся без дождя.")
-                        Toggle(isOn: boolBinding(\.usePicture)) { label("Показывать картинку") }
+                        note("The chosen picture shows through the rain symbols; black stays free of rain.")
+                        Toggle(isOn: boolBinding(\.usePicture)) { label("Show the picture") }
                             .tint(Brand.green)
-                        label("Смешивание")
+                        label("Blending")
                         HStack(spacing: 8) {
                             BrandChip(label: "Copy", selected: store.config.pictureBlend == 0) { store.config.pictureBlend = 0 }
                             BrandChip(label: "OR", selected: store.config.pictureBlend == 1) { store.config.pictureBlend = 1 }
                             BrandChip(label: "AND", selected: store.config.pictureBlend == 2) { store.config.pictureBlend = 2 }
                         }
                         .padding(.vertical, 6)
-                        note("Copy: символы показывают саму картинку. OR: к картинке добавляется цвет шлейфа. AND: картинка окрашивается цветом шлейфа.")
-                        Toggle(isOn: boolBinding(\.pictureCover)) { label("Заполнить весь экран (обрезать)") }
+                        note("Copy: the symbols show the picture itself. OR: the trail colour is added to the picture. AND: the picture is tinted with the trail colour.")
+                        Toggle(isOn: boolBinding(\.pictureCover)) { label("Fill the whole screen (crop)") }
                             .tint(Brand.green)
                         HStack(spacing: 14) {
                             PhotosPicker(selection: $pickerItem, matching: .images) {
-                                Text("Выбрать картинку").glassPill()
+                                Text("Choose picture").glassPill()
                             }
-                            Button("Убрать") {
+                            Button("Remove") {
                                 PictureStore.delete()
                                 store.config.usePicture = false
                                 store.config.pictureVersion += 1
@@ -81,33 +82,47 @@ struct SettingsView: View {
                         .padding(.vertical, 10)
                     }
 
-                    SectionTitle("Цвет")
+                    SectionTitle("Colour")
                     NeonCard {
                         HStack(spacing: 8) { ForEach(0..<3, id: \.self) { presetChip($0) } }
                         HStack(spacing: 8) { ForEach(3..<6, id: \.self) { presetChip($0) } }
-                        ColorPicker(selection: colorBinding(\.fade), supportsOpacity: false) { label("Свой цвет шлейфа") }
-                        ColorPicker(selection: colorBinding(\.fg), supportsOpacity: false) { label("Свой цвет головы") }
-                        ColorPicker(selection: colorBinding(\.bg), supportsOpacity: false) { label("Фон") }
+                        ColorPicker(selection: colorBinding(\.fade), supportsOpacity: false) { label("Custom trail colour") }
+                        ColorPicker(selection: colorBinding(\.fg), supportsOpacity: false) { label("Custom head colour") }
+                        ColorPicker(selection: colorBinding(\.bg), supportsOpacity: false) { label("Background") }
                     }
 
                     HStack(spacing: 14) {
-                        Button("Сбросить") { store.reset() }
+                        Button("Reset") { store.reset() }
                             .buttonStyle(PillButtonStyle(color: Brand.red))
-                        Button { dismiss() } label: { Text("Готово").frame(maxWidth: .infinity) }
+                        Button { dismiss() } label: { Text("Done").frame(maxWidth: .infinity) }
                             .buttonStyle(PillButtonStyle())
                     }
                     .padding(.top, 18)
                     .padding(.horizontal, 4)
 
-                    Text("BAVtrix 1.0 · BArkVestan_Development · GPL-2.0")
+                    Text("BAVtrix 1.0 · © 2026 MIV ekonomi d.o.o.")
                         .font(Brand.font(12)).foregroundColor(Brand.text2)
                         .padding(.top, 10)
+
+                    Button("Licenses") { showLicenses = true }
+                        .buttonStyle(PillButtonStyle(glow: .soft))
+                        .padding(.top, 4)
+
+                    // Opens the policy in the browser (no web view inside the app).
+                    Link(destination: URL(string: "https://barkvestandevelopment.party/bavtrix/apple/privacy")!) {
+                        Text("Privacy Policy")
+                            .font(Brand.font(15))
+                            .foregroundColor(Brand.green)
+                            .underline()
+                    }
+                    .padding(.top, 10)
                 }
                 .padding(.horizontal, 18)
                 .padding(.vertical, 22)
             }
         }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showLicenses) { LicensesView() }
         .onChange(of: pickerItem) { item in
             guard let item = item else { return }
             Task { @MainActor in

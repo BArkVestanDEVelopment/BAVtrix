@@ -5,6 +5,7 @@ import android.graphics.Paint
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -172,7 +173,12 @@ fun GlowTitle(text: String, modifier: Modifier = Modifier) {
 
 /** `glass-pill`: glass background, hairline border, green text and the outward green glow. */
 @Composable
-fun NeonButton(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun NeonButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable () -> Unit,
+) {
     NoTouchPadding {
         Button(
             onClick = onClick,

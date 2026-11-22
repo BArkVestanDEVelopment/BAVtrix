@@ -3,8 +3,9 @@ name = "bavtrix"
 version = "1.0.0"
 edition = "2021"
 authors = ["BArkVestan_Development"]
-description ="BAVtrix: modern re-implementation of ZMatrix (Matrix digital rain) for high-DPI Windows"
-license = "GPL-2.0-or-later"
+description = "BAVtrix: digital rain for the Windows desktop (high-DPI, multi-monitor)"
+license-file = "../LICENSE"
+publish = false
 
 [build-dependencies]
 embed-resource = "2.5"

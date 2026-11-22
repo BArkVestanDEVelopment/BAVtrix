@@ -19,6 +19,29 @@ final class SettingsStore: ObservableObject {
             config = RainConfig()
         }
         #if DEBUG
+        // Debug-only launch arguments for the App Store screenshots (not present in Release builds):
+        //   -debugReset YES            start from the defaults and drop the stored picture
+        //   -debugTheme <Green|Blue|Red|Amber|Violet|White>
+        //   -debugBlend <0|1|2>        picture blending: Copy, OR, AND
+        //   -debugPictureFile <path>   use this image as the picture and switch the effect on
+        let args = UserDefaults.standard
+        if args.bool(forKey: "debugReset") {
+            PictureStore.delete()
+            config = RainConfig()
+        }
+        if let name = args.string(forKey: "debugTheme"),
+           let preset = presets.first(where: { $0.name.lowercased() == name.lowercased() }) {
+            config.fg = preset.fg
+            config.fade = preset.fade
+        }
+        if args.object(forKey: "debugBlend") != nil {
+            config.pictureBlend = args.integer(forKey: "debugBlend")
+        }
+        if let path = args.string(forKey: "debugPictureFile"),
+           let image = UIImage(contentsOfFile: path), PictureStore.save(image) {
+            config.usePicture = true
+            config.pictureVersion += 1
+        }
         // CI screenshots: `-debugPicture YES` turns the picture effect on with a generated picture.
         if UserDefaults.standard.bool(forKey: "debugPicture") {
             PictureStore.makeDebugPicture()

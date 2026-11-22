@@ -6,49 +6,49 @@ struct MacSettingsView: View {
 
     var body: some View {
         Form {
-            Section("Рабочий стол") {
-                Toggle("Скрывать значки рабочего стола", isOn: $store.coverIcons)
-                Toggle("Запускать при входе", isOn: Binding(
+            Section("Desktop") {
+                Toggle("Hide desktop icons", isOn: $store.coverIcons)
+                Toggle("Launch at login", isOn: Binding(
                     get: { store.launchAtLogin },
                     set: { store.setLaunchAtLogin($0) }))
             }
-            Section("Дождь") {
-                slider("Плотность", floatBinding(\.spawnRate), 0.05...0.97, "%.0f%%", 100)
-                slider("Разброс скоростей", floatBinding(\.speedVariance), 1...20, "%.0f", 1)
-                slider("Время шага, мс", floatBinding(\.refreshMs), 10...300, "%.0f", 1)
-                slider("Размер символов", floatBinding(\.glyphSize), 5...30, "%.0f pt", 1)
-                slider("Спецстрока, %", floatBinding(\.specialProbability), 0...1, "%.0f%%", 100)
+            Section("Rain") {
+                slider("Density", floatBinding(\.spawnRate), 0.05...0.97, "%.0f%%", 100)
+                slider("Speed variance", floatBinding(\.speedVariance), 1...20, "%.0f", 1)
+                slider("Step time, ms", floatBinding(\.refreshMs), 10...300, "%.0f", 1)
+                slider("Symbol size", floatBinding(\.glyphSize), 5...30, "%.0f pt", 1)
+                slider("Special text, %", floatBinding(\.specialProbability), 0...1, "%.0f%%", 100)
             }
-            Section("Шлейф") {
+            Section("Trail") {
                 Stepper(value: intBinding(\.trailMin), in: 2...200) {
-                    row("Мин. длина шлейфа", "\(store.config.trailMin)")
+                    row("Min. trail length", "\(store.config.trailMin)")
                 }
                 Stepper(value: intBinding(\.trailMax), in: 0...300) {
-                    row("Макс. длина (0 = авто)", "\(store.config.trailMax)")
+                    row("Max. length (0 = auto)", "\(store.config.trailMax)")
                 }
             }
-            Section("Мерцание") {
-                slider("Символы в шлейфе", floatBinding(\.flicker), 0...1, "%.0f%%", 100)
-                slider("Голова потока", floatBinding(\.headFlicker), 0...1, "%.0f%%", 100)
-                slider("Яркость головы", floatBinding(\.headBrightness), 0.5...2, "%.0f%%", 100)
+            Section("Flicker") {
+                slider("Symbols in the trail", floatBinding(\.flicker), 0...1, "%.0f%%", 100)
+                slider("Stream head", floatBinding(\.headFlicker), 0...1, "%.0f%%", 100)
+                slider("Head brightness", floatBinding(\.headBrightness), 0.5...2, "%.0f%%", 100)
             }
-            Section("Обои сквозь символы") {
-                Toggle("Показывать обои рабочего стола сквозь символы", isOn: boolBinding(\.usePicture))
-                Picker("Смешивание", selection: intBinding(\.pictureBlend)) {
+            Section("Wallpaper through the symbols") {
+                Toggle("Show the desktop wallpaper through the symbols", isOn: boolBinding(\.usePicture))
+                Picker("Blending", selection: intBinding(\.pictureBlend)) {
                     Text("Copy").tag(0)
                     Text("OR").tag(1)
                     Text("AND").tag(2)
                 }
                 .pickerStyle(.segmented)
-                Toggle("Растянуть на весь экран (обрезать края)", isOn: boolBinding(\.pictureCover))
+                Toggle("Fill the whole screen (crop the edges)", isOn: boolBinding(\.pictureCover))
             }
-            Section("Цвета") {
-                ColorPicker("Шлейф", selection: colorBinding(\.fade), supportsOpacity: false)
-                ColorPicker("Голова потока", selection: colorBinding(\.fg), supportsOpacity: false)
-                ColorPicker("Фон", selection: colorBinding(\.bg), supportsOpacity: false)
+            Section("Colours") {
+                ColorPicker("Trail", selection: colorBinding(\.fade), supportsOpacity: false)
+                ColorPicker("Stream head", selection: colorBinding(\.fg), supportsOpacity: false)
+                ColorPicker("Background", selection: colorBinding(\.bg), supportsOpacity: false)
             }
             Section {
-                Button("Сбросить настройки", role: .destructive) { store.reset() }
+                Button("Reset settings", role: .destructive) { store.reset() }
             }
         }
         .formStyle(.grouped)

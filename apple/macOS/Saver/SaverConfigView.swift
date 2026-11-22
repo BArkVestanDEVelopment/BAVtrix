@@ -18,15 +18,15 @@ struct SaverConfigView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("BAVtrix").font(.headline)
 
-            slider("Плотность", floatBinding(\.spawnRate), 0.05...0.97, "%.0f%%", 100)
-            slider("Разброс скоростей", floatBinding(\.speedVariance), 1...20, "%.0f", 1)
-            slider("Размер символов", floatBinding(\.glyphSize), 5...30, "%.0f pt", 1)
-            slider("Мерцание символов", floatBinding(\.flicker), 0...1, "%.0f%%", 100)
+            slider("Density", floatBinding(\.spawnRate), 0.05...0.97, "%.0f%%", 100)
+            slider("Speed variance", floatBinding(\.speedVariance), 1...20, "%.0f", 1)
+            slider("Symbol size", floatBinding(\.glyphSize), 5...30, "%.0f pt", 1)
+            slider("Symbol flicker", floatBinding(\.flicker), 0...1, "%.0f%%", 100)
 
-            Toggle("Обои рабочего стола сквозь символы", isOn: Binding(
+            Toggle("Desktop wallpaper through the symbols", isOn: Binding(
                 get: { model.config.usePicture },
                 set: { model.config.usePicture = $0 }))
-            Picker("Смешивание", selection: Binding(
+            Picker("Blending", selection: Binding(
                 get: { model.config.pictureBlend },
                 set: { model.config.pictureBlend = $0 })) {
                 Text("Copy").tag(0)
@@ -36,13 +36,13 @@ struct SaverConfigView: View {
             .pickerStyle(.segmented)
 
             HStack {
-                Button("Сбросить") {
+                Button("Reset") {
                     var fresh = RainConfig()
                     fresh.usePicture = true
                     model.config = fresh
                 }
                 Spacer()
-                Button("Отмена") { onClose(false) }
+                Button("Cancel") { onClose(false) }
                 Button("OK") { onClose(true) }.keyboardShortcut(.defaultAction)
             }
         }

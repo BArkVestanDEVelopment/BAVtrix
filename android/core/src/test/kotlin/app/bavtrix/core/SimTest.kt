@@ -29,7 +29,7 @@ class SimTest {
     fun everyLitCellBelongsToAKnownSlot() {
         val sim = RainSim(30, 60, RainConfig(), 2)
         run(sim, 15f)
-        val glyphLimit = maxOf(sim.config.charsetChars.size, sim.config.specialChars.size)
+        val glyphLimit = maxOf(GlyphData.shapes.size, sim.config.specialChars.size)
         for (i in sim.flags.indices) {
             if (sim.flags[i] and CellFlag.ON == 0) continue
             assertTrue(sim.sid[i] < sim.slots.size)

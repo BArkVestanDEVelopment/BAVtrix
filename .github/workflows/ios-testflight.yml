@@ -1,0 +1,103 @@
+name: iOS TestFlight
+
+# Signed iOS archive uploaded to App Store Connect (TestFlight). Manual run or an `ios-v*` tag only.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "ios-v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+env:
+  TEAM_ID: RF96N7V67T
+  MARKETING_VERSION: "1.0.0"
+
+jobs:
+  testflight:
+    name: Archive and upload to TestFlight
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: apple
+        run: xcodegen generate
+
+      - name: Write the App Store Connect API key to a temporary file
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+        run: |
+          set +x
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s' "$ASC_KEY_P8_BASE64" | base64 --decode > "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          chmod 600 "$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8"
+          echo "ASC_KEY_PATH=$RUNNER_TEMP/asc/AuthKey_${ASC_KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      # The team has no registered devices, so Xcode cannot create a development profile for the
+      # archive. Archive without signing; the Distribution signature is created at export time.
+      - name: Archive (unsigned)
+        working-directory: apple
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project BAVtrix.xcodeproj -scheme BAVtrix-iOS \
+            -configuration Release -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/BAVtrix.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="$TEAM_ID" \
+            MARKETING_VERSION="$MARKETING_VERSION" CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
+            2>&1 | tee "$RUNNER_TEMP/archive.log" | tail -n 80
+
+      - name: Export (cloud Distribution signing) and upload to App Store Connect
+        working-directory: apple
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/BAVtrix.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
+            2>&1 | tee "$RUNNER_TEMP/export.log" | tail -n 80
+
+      - name: Remove the API key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: testflight-logs
+          path: |
+            ${{ runner.temp }}/archive.log
+            ${{ runner.temp }}/export.log

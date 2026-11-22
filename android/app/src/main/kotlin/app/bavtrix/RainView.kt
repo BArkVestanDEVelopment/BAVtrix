@@ -23,13 +23,15 @@ class RainView @JvmOverloads constructor(
     private val frame = object : Choreographer.FrameCallback {
         override fun doFrame(frameTimeNanos: Long) {
             if (!running) return
+            Choreographer.getInstance().postFrameCallback(this)
+            // 60 frames per second at most, even on 90/120 Hz displays.
+            if (lastNanos != 0L && frameTimeNanos - lastNanos < 15_000_000L) return
             if (lastNanos != 0L) {
                 val dt = ((frameTimeNanos - lastNanos) / 1_000_000f).coerceIn(1f, 250f)
                 renderer.advance(dt)
             }
             lastNanos = frameTimeNanos
             invalidate()
-            Choreographer.getInstance().postFrameCallback(this)
         }
     }
 
