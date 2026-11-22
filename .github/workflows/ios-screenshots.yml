@@ -31,7 +31,7 @@ jobs:
             -sdk iphonesimulator -configuration Debug -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | tail -n 40
 
-      - name: Generate the store picture (own artwork: moon over mountains)
+      - name: Generate the store picture (own artwork, moon over mountains)
         run: swift apple/ci/make-store-picture.swift "$RUNNER_TEMP/store-picture.png"
 
       - name: Take the screenshots
