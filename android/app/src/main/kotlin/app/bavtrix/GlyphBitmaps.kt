@@ -46,7 +46,7 @@ class GlyphBitmaps(glyphSizePx: Float) {
     }
 
     private fun render(shape: GlyphShape, canvas: Canvas, ox: Int, oy: Int) {
-        val lineWidth = max(1f, cellH * 0.095f)
+        val lineWidth = max(1f, cellH * 0.13f)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             style = Paint.Style.STROKE

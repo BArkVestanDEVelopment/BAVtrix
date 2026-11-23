@@ -52,7 +52,7 @@ public final class GlyphAtlas {
         ctx.setFillColor(gray: 0, alpha: 1)
         ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
         ctx.setStrokeColor(gray: 1, alpha: 1)
-        let lineWidth = max(1, CGFloat(h) * 0.095)
+        let lineWidth = max(1, CGFloat(h) * 0.13)
         ctx.setLineWidth(lineWidth)
         ctx.setLineCap(.square)
         ctx.setLineJoin(.miter)
