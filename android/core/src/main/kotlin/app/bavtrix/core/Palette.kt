@@ -7,6 +7,12 @@ import kotlin.math.roundToInt
 
 /** Final colour of a lit cell: depth shade, trail fade and head brightness applied. */
 object Palette {
+    // pow() tables (index = value * 256): the colour of every lit cell is computed each frame.
+    private val POW13 = FloatArray(257) { (it / 256f).pow(1.3f) }
+    private val POW22 = FloatArray(257) { (it / 256f).pow(2.2f) }
+    internal fun pow13(x: Float): Float = POW13[(min(max(x, 0f), 1f) * 256f + 0.5f).toInt()]
+    internal fun pow22(x: Float): Float = POW22[(min(max(x, 0f), 1f) * 256f + 0.5f).toInt()]
+
     /** Returned for empty cells. */
     const val NONE = 0
 
@@ -33,7 +39,7 @@ object Palette {
         val age = max(slot.head - row, 0).toFloat()
         val len = max(slot.len, 1).toFloat()
         val fade = if (bright) 1f else {
-            val v = 0.12f + 0.88f * min(max(1 - age / len, 0f), 1f).pow(1.3f)
+            val v = 0.12f + 0.88f * pow13(1 - age / len)
             (v * 32).roundToInt() / 32f
         }
         val boost = if (bright) cfg.headBrightness else 1f
@@ -63,8 +69,8 @@ fun Palette.depthLevel(sim: RainSim, idx: Int, row: Int): Float {
     val slot = if (id < sim.slots.size) sim.slots[id] else Slot()
     val age = max(slot.head - row, 0).toFloat()
     val len = max(slot.len, 1).toFloat()
-    val fade = if (bright) 1f else 0.12f + 0.88f * min(max(1 - age / len, 0f), 1f).pow(1.3f)
+    val fade = if (bright) 1f else 0.12f + 0.88f * pow13(1 - age / len)
     val level = min(sim.shade[idx] * fade / 255f, 1f)
-    val v = 0.06f + 0.94f * level.pow(2.2f)
+    val v = 0.06f + 0.94f * pow22(level)
     return (v * 32).roundToInt() / 32f
 }

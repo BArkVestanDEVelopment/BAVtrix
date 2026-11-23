@@ -23,8 +23,8 @@ class RainWallpaperService : WallpaperService() {
             override fun doFrame(frameTimeNanos: Long) {
                 if (!visible) return
                 Choreographer.getInstance().postFrameCallback(this)
-                // 60 frames per second at most, even on 90/120 Hz displays.
-                if (lastNanos != 0L && frameTimeNanos - lastNanos < 15_000_000L) return
+                // The wallpaper runs all day: 30 frames per second keep the battery use low (the rain steps every 100+ ms anyway).
+                if (lastNanos != 0L && frameTimeNanos - lastNanos < 30_000_000L) return
                 if (lastNanos != 0L) {
                     renderer.advance(((frameTimeNanos - lastNanos) / 1_000_000f).coerceIn(1f, 250f))
                 }
