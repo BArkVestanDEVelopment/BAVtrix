@@ -9,6 +9,7 @@ import android.graphics.ColorFilter
 import android.graphics.LightingColorFilter
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Rect
 import android.graphics.Shader
 import android.graphics.Typeface
 import app.bavtrix.core.GlyphData
@@ -25,7 +26,23 @@ class RainRenderer(context: Context) {
     private val appContext = context.applicationContext
     private val density = context.resources.displayMetrics.density
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val srcRect = Rect()
+    private val dstRect = Rect()
 
+    // Batched drawing: every plain glyph of a frame goes into one drawVertices call (a single
+    // recorded operation instead of thousands of drawBitmap calls).
+    private val vertPaint = Paint().apply { isFilterBitmap = false }
+    private var vertShaderAtlas: Bitmap? = null
+    private var vertices = FloatArray(BATCH * 8)
+    private var texCoords = FloatArray(BATCH * 8)
+    private var vertexColors = IntArray(BATCH * 4)
+    private val indices = ShortArray(BATCH * 6).also {
+        for (i in 0 until BATCH) {
+            val b = i * 4
+            it[i * 6] = b.toShort(); it[i * 6 + 1] = (b + 1).toShort(); it[i * 6 + 2] = (b + 2).toShort()
+            it[i * 6 + 3] = b.toShort(); it[i * 6 + 4] = (b + 2).toShort(); it[i * 6 + 5] = (b + 3).toShort()
+        }
+    }
     private var sim: RainSim? = null
     private var width = 0
     private var height = 0
@@ -147,14 +164,77 @@ class RainRenderer(context: Context) {
         return f
     }
 
+    private fun flushBatch(canvas: Canvas, n: Int) {
+        if (n <= 0) return
+        canvas.drawVertices(
+            Canvas.VertexMode.TRIANGLES, n * 8, vertices, 0, texCoords, 0, vertexColors, 0, indices, 0, n * 6, vertPaint,
+        )
+    }
+
+    /** Plain glyphs in one batch (colour multiplied with the white atlas); text cells one by one. */
+    private fun drawBatched(canvas: Canvas, s: RainSim, gb: GlyphBitmaps, x0: Int, y0: Int, cw: Int, ch: Int) {
+        if (vertShaderAtlas !== gb.atlasArgb) {
+            vertShaderAtlas = gb.atlasArgb
+            vertPaint.shader = BitmapShader(gb.atlasArgb, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        }
+        paint.shader = null
+        paint.colorFilter = null
+        val glyphCount = GlyphData.shapes.size
+        var n = 0
+        for (row in 0 until s.rows) {
+            for (col in 0 until s.cols) {
+                val idx = row * s.cols + col
+                val color = Palette.color(s, idx, row)
+                if (color == Palette.NONE) continue
+                val g = s.glyph[idx]
+                val left = (x0 + col * cw).toFloat()
+                val top = (y0 + row * ch).toFloat()
+                if (s.flags[idx] and CellFlag.SPECIAL_GLYPH != 0) {
+                    if (g >= specialChars.size) continue
+                    paint.color = color
+                    canvas.drawText(specialChars, g, 1, left, top + ascent, paint)
+                    continue
+                }
+                if (g >= glyphCount) continue
+                gb.srcRect(g, srcRect)
+                val v = n * 8
+                val right = left + cw
+                val bottom = top + ch
+                vertices[v] = left; vertices[v + 1] = top
+                vertices[v + 2] = right; vertices[v + 3] = top
+                vertices[v + 4] = right; vertices[v + 5] = bottom
+                vertices[v + 6] = left; vertices[v + 7] = bottom
+                texCoords[v] = srcRect.left.toFloat(); texCoords[v + 1] = srcRect.top.toFloat()
+                texCoords[v + 2] = srcRect.right.toFloat(); texCoords[v + 3] = srcRect.top.toFloat()
+                texCoords[v + 4] = srcRect.right.toFloat(); texCoords[v + 5] = srcRect.bottom.toFloat()
+                texCoords[v + 6] = srcRect.left.toFloat(); texCoords[v + 7] = srcRect.bottom.toFloat()
+                val c = n * 4
+                vertexColors[c] = color; vertexColors[c + 1] = color; vertexColors[c + 2] = color; vertexColors[c + 3] = color
+                n++
+                if (n == BATCH) {
+                    flushBatch(canvas, n)
+                    n = 0
+                }
+            }
+        }
+        flushBatch(canvas, n)
+    }
+
     fun draw(canvas: Canvas) {
         val bg = config.bg
         canvas.drawColor((0xFF shl 24) or (bg.r shl 16) or (bg.g shl 8) or bg.b)
         val s = sim ?: return
         val shader = pictureShader
         paint.shader = shader
-        val x0 = (width - s.cols * cellW) / 2f
-        val y0 = (height - s.rows * cellH) / 2f
+        val x0 = ((width - s.cols * cellW) / 2f).toInt()
+        val y0 = ((height - s.rows * cellH) / 2f).toInt()
+        val gb = glyphs
+        val cw = cellW.toInt()
+        val ch = cellH.toInt()
+        if (shader == null && gb != null) {
+            drawBatched(canvas, s, gb, x0, y0, cw, ch)
+            return
+        }
         for (row in 0 until s.rows) {
             for (col in 0 until s.cols) {
                 val idx = row * s.cols + col
@@ -177,10 +257,14 @@ class RainRenderer(context: Context) {
                     paint.color = color
                 }
                 if (special) {
-                    canvas.drawText(specialChars, g, 1, x0 + col * cellW, y0 + row * cellH + ascent, paint)
+                    canvas.drawText(specialChars, g, 1, (x0 + col * cw).toFloat(), y0 + row * ch + ascent, paint)
                 } else {
-                    val bmp = glyphs?.bitmaps?.get(g) ?: continue
-                    canvas.drawBitmap(bmp, x0 + col * cellW, y0 + row * cellH, paint)
+                    if (gb == null) continue
+                    gb.srcRect(g, srcRect)
+                    val left = x0 + col * cw
+                    val top = y0 + row * ch
+                    dstRect.set(left, top, left + cw, top + ch)
+                    canvas.drawBitmap(gb.atlas, srcRect, dstRect, paint)
                 }
             }
         }
@@ -188,3 +272,5 @@ class RainRenderer(context: Context) {
         paint.colorFilter = null
     }
 }
+
+private const val BATCH = 8000

@@ -24,6 +24,7 @@ final class SettingsStore: ObservableObject {
         //   -debugTheme <Green|Blue|Red|Amber|Violet|White>
         //   -debugBlend <0|1|2>        picture blending: Copy, OR, AND
         //   -debugPictureFile <path>   use this image as the picture and switch the effect on
+        //   -debugDensity <0.05...0.97>, -debugTrailMin <n>, -debugRefreshMs <ms>   denser, faster rain
         let args = UserDefaults.standard
         if args.bool(forKey: "debugReset") {
             PictureStore.delete()
@@ -37,6 +38,9 @@ final class SettingsStore: ObservableObject {
         if args.object(forKey: "debugBlend") != nil {
             config.pictureBlend = args.integer(forKey: "debugBlend")
         }
+        if args.object(forKey: "debugDensity") != nil { config.spawnRate = args.float(forKey: "debugDensity") }
+        if args.object(forKey: "debugTrailMin") != nil { config.trailMin = args.integer(forKey: "debugTrailMin") }
+        if args.object(forKey: "debugRefreshMs") != nil { config.refreshMs = args.float(forKey: "debugRefreshMs") }
         if let path = args.string(forKey: "debugPictureFile"),
            let image = UIImage(contentsOfFile: path), PictureStore.save(image) {
             config.usePicture = true

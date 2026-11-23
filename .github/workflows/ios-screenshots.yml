@@ -31,7 +31,7 @@ jobs:
             -sdk iphonesimulator -configuration Debug -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO build 2>&1 | tee build.log | tail -n 40
 
-      - name: Generate the store picture (own abstract artwork)
+      - name: Generate the store picture (own artwork, moon over mountains)
         run: swift apple/ci/make-store-picture.swift "$RUNNER_TEMP/store-picture.png"
 
       - name: Take the screenshots
@@ -77,8 +77,8 @@ jobs:
             }
             run 14 1-rain.png -debugReset YES
             run 8  2-settings.png -debugReset YES -showSettings YES
-            run 12 3-picture-copy.png -debugReset YES -debugPictureFile "$PIC" -debugBlend 0
-            run 12 4-picture-or-blue.png -debugReset YES -debugPictureFile "$PIC" -debugBlend 1 -debugTheme Blue
+            run 28 3-picture-copy.png -debugReset YES -debugPictureFile "$PIC" -debugBlend 0 -debugDensity 0.97 -debugTrailMin 60 -debugRefreshMs 60
+            run 28 4-picture-or-blue.png -debugReset YES -debugPictureFile "$PIC" -debugBlend 1 -debugTheme Blue -debugDensity 0.97 -debugTrailMin 60 -debugRefreshMs 60
             run 14 5-amber.png -debugReset YES -debugTheme Amber
             xcrun simctl shutdown "$udid" || true
             for f in "$dir"/*.png; do
