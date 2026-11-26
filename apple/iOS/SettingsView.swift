@@ -22,6 +22,11 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var pickerItem: PhotosPickerItem?
     @State private var showLicenses = false
+    @State private var saveStatus: SaveStatus = .idle
+
+    private enum SaveStatus {
+        case idle, saving, saved, denied, failed
+    }
 
     var body: some View {
         ZStack {
@@ -91,6 +96,29 @@ struct SettingsView: View {
                         ColorPicker(selection: colorBinding(\.bg), supportsOpacity: false) { label("Background") }
                     }
 
+                    SectionTitle("Frame")
+                    NeonCard {
+                        note("Saves the current rain frame, without any buttons, at full screen resolution. Set it as wallpaper from Photos.")
+                        Button(saveStatus == .saving ? "Saving…" : "Save frame to Photos") { saveFrame() }
+                            .buttonStyle(PillButtonStyle())
+                            .disabled(saveStatus == .saving)
+                            .padding(.vertical, 8)
+                        if saveStatus == .saved {
+                            note("Saved to Photos.")
+                        } else if saveStatus == .failed {
+                            note("Could not save the frame. Please try again.")
+                        } else if saveStatus == .denied {
+                            note("Allow adding photos in Settings.")
+                            Button("Open Settings") {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            }
+                            .buttonStyle(PillButtonStyle(glow: .soft))
+                            .padding(.bottom, 8)
+                        }
+                    }
+
                     HStack(spacing: 14) {
                         Button("Reset") { store.reset() }
                             .buttonStyle(PillButtonStyle(color: Brand.red))
@@ -133,6 +161,24 @@ struct SettingsView: View {
                     store.config.pictureVersion += 1
                 }
                 pickerItem = nil
+            }
+        }
+    }
+
+    // MARK: Saving a frame
+
+    private func saveFrame() {
+        // Rendered offscreen from the rain view: the settings sheet is not part of the picture.
+        guard let image = RainUIView.current?.snapshotFrame() else {
+            saveStatus = .failed
+            return
+        }
+        saveStatus = .saving
+        FrameSaver.save(image) { outcome in
+            switch outcome {
+            case .saved: saveStatus = .saved
+            case .denied: saveStatus = .denied
+            case .failed: saveStatus = .failed
             }
         }
     }

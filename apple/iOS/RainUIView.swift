@@ -22,6 +22,9 @@ final class RainUIView: UIView {
         }
     }
 
+    /// The rain view on screen (used by Settings to save the current frame).
+    static weak var current: RainUIView?
+
     private var sim: RainSim?
     private var link: CADisplayLink?
     private var lastTimestamp: CFTimeInterval = 0
@@ -107,6 +110,7 @@ final class RainUIView: UIView {
     override func didMoveToWindow() {
         super.didMoveToWindow()
         if window != nil {
+            RainUIView.current = self
             let l = CADisplayLink(target: self, selector: #selector(tick(_:)))
             l.preferredFramesPerSecond = 30
             l.add(to: .main, forMode: .common)
@@ -295,13 +299,14 @@ final class RainUIView: UIView {
         return stats
     }
 
-    override func draw(_ rect: CGRect) {
-        guard let ctx = UIGraphicsGetCurrentContext() else { return }
-        let started = CACurrentMediaTime()
+    /// Draws the background and the rain (with the picture effect) into `ctx`, which uses UIKit's
+    /// y-down coordinates of this view. No buttons and no debug text.
+    @discardableResult
+    private func renderRain(_ ctx: CGContext) -> (lit: Int, drawn: Int)? {
         let bg = config.bg
         ctx.setFillColor(red: CGFloat(bg.r) / 255, green: CGFloat(bg.g) / 255, blue: CGFloat(bg.b) / 255, alpha: 1)
         ctx.fill(bounds)
-        guard let sim = sim else { return }
+        guard let sim = sim else { return nil }
 
         var stats: (lit: Int, drawn: Int)?
         if config.usePicture, let picture = pictureImage {
@@ -321,6 +326,26 @@ final class RainUIView: UIView {
             stats = drawGlyphs(ctx, sim: sim, height: bounds.height)
             ctx.restoreGState()
         }
+        return stats
+    }
+
+    /// The current frame at the screen's pixel size, rendered offscreen.
+    func snapshotFrame() -> UIImage? {
+        guard sim != nil, bounds.width > 0, bounds.height > 0 else { return nil }
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = max(contentScaleFactor, 1)
+        format.opaque = true
+        format.preferredRange = .standard
+        return UIGraphicsImageRenderer(size: bounds.size, format: format).image { context in
+            renderRain(context.cgContext)
+        }
+    }
+
+    override func draw(_ rect: CGRect) {
+        guard let ctx = UIGraphicsGetCurrentContext() else { return }
+        let started = CACurrentMediaTime()
+        let stats = renderRain(ctx)
+        guard let sim = sim else { return }
 
         let elapsed = (CACurrentMediaTime() - started) * 1000
         drawMs = drawMs == 0 ? elapsed : drawMs * 0.9 + elapsed * 0.1
