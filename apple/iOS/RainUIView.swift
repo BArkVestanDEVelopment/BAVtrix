@@ -39,6 +39,11 @@ final class RainUIView: UIView {
     private var glyphLayer: CGContext?
     private var pictureLayer: CGContext?
     private var layerPixels = (w: 0, h: 0)
+    // The picture already scaled and placed at screen resolution, so that no frame has to resample it.
+    private var scaledPicture: CGImage?
+    private var scaledPictureKey = ""
+    /// Smoothed duration of `draw(_:)` in milliseconds (shown by the debug overlay).
+    private var drawMs: Double = 0
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -86,6 +91,8 @@ final class RainUIView: UIView {
 
     private func reloadPicture() {
         pictureImage = config.usePicture ? PictureStore.load() : nil
+        scaledPicture = nil
+        scaledPictureKey = ""
     }
 
     override func layoutSubviews() {
@@ -128,8 +135,12 @@ final class RainUIView: UIView {
     /// for a surface that is `height` points tall.
     @discardableResult
     private func drawGlyphs(_ ctx: CGContext, sim: RainSim, height: CGFloat, depthOnly: Bool = false) -> (lit: Int, drawn: Int) {
-        let x0 = (bounds.width - CGFloat(sim.cols) * cellW) / 2
-        let y0 = (bounds.height - CGFloat(sim.rows) * cellH) / 2
+        // The masks have exactly the screen's pixel size: put the grid on whole pixels and stamp
+        // them without resampling (cells are whole points, so every cell stays aligned).
+        let pixel = max(atlas?.scale ?? 1, 1)
+        let x0 = ((bounds.width - CGFloat(sim.cols) * cellW) / 2 * pixel).rounded(.down) / pixel
+        let y0 = ((bounds.height - CGFloat(sim.rows) * cellH) / 2 * pixel).rounded(.down) / pixel
+        ctx.interpolationQuality = .none
         var lit = 0
         var drawn = 0
         for row in 0..<sim.rows {
@@ -181,6 +192,47 @@ final class RainUIView: UIView {
         return CGRect(x: (bounds.width - w) / 2, y: (bounds.height - h) / 2, width: w, height: h)
     }
 
+    private var hasBlackBackground: Bool {
+        config.bg.r == 0 && config.bg.g == 0 && config.bg.b == 0
+    }
+
+    /// The picture rendered once at screen resolution. Over a black background it is made opaque
+    /// (black outside the picture), otherwise it stays transparent there.
+    private func screenPicture(_ picture: CGImage, width: Int, height: Int, scale: CGFloat) -> CGImage? {
+        let key = "\(width)x\(height) \(config.pictureCover) \(config.pictureVersion) \(hasBlackBackground)"
+        if key == scaledPictureKey, let cached = scaledPicture { return cached }
+        guard let layer = makeLayer(width: width, height: height) else { return nil }
+        let full = CGRect(x: 0, y: 0, width: width, height: height)
+        layer.clear(full)
+        if hasBlackBackground {
+            layer.setFillColor(red: 0, green: 0, blue: 0, alpha: 1)
+            layer.fill(full)
+        }
+        layer.interpolationQuality = .high
+        layer.scaleBy(x: scale, y: scale)
+        layer.draw(picture, in: pictureRect(for: picture))
+        scaledPicture = layer.makeImage()
+        scaledPictureKey = key
+        return scaledPicture
+    }
+
+    /// Picture effect, Copy and AND over a black background: the glyphs are drawn straight onto
+    /// the screen and the ready picture is multiplied over them in one pass (no offscreen layers).
+    private func drawWithPictureDirect(_ ctx: CGContext, sim: RainSim, picture: CGImage) -> (lit: Int, drawn: Int)? {
+        let scale = max(contentScaleFactor, 1)
+        let pw = Int(bounds.width * scale), ph = Int(bounds.height * scale)
+        guard pw > 0, ph > 0, let ready = screenPicture(picture, width: pw, height: ph, scale: scale) else { return nil }
+        ctx.saveGState()
+        ctx.translateBy(x: 0, y: bounds.height)
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.textMatrix = .identity
+        let stats = drawGlyphs(ctx, sim: sim, height: bounds.height, depthOnly: config.pictureBlend == 0)
+        ctx.setBlendMode(.multiply)
+        ctx.draw(ready, in: CGRect(origin: .zero, size: bounds.size))
+        ctx.restoreGState()
+        return stats
+    }
+
     /// Picture effect: the glyphs are drawn into a layer, the picture is kept only where they are
     /// (`destinationIn`) and the two are composed on the screen according to the blend mode.
     private func drawWithPicture(_ ctx: CGContext, sim: RainSim, picture: CGImage) -> (lit: Int, drawn: Int)? {
@@ -192,7 +244,8 @@ final class RainUIView: UIView {
             pictureLayer = makeLayer(width: pw, height: ph)
             layerPixels = (pw, ph)
         }
-        guard let gctx = glyphLayer, let pctx = pictureLayer else { return nil }
+        guard let gctx = glyphLayer, let pctx = pictureLayer,
+              let ready = screenPicture(picture, width: pw, height: ph, scale: scale) else { return nil }
         let full = CGRect(x: 0, y: 0, width: pw, height: ph)
 
         // 1. Coloured glyphs.
@@ -206,10 +259,8 @@ final class RainUIView: UIView {
 
         // 2. The picture, kept only where glyphs are.
         pctx.clear(full)
-        pctx.saveGState()
-        pctx.scaleBy(x: scale, y: scale)
-        pctx.draw(picture, in: pictureRect(for: picture))
-        pctx.restoreGState()
+        pctx.interpolationQuality = .none
+        pctx.draw(ready, in: full)
         pctx.setBlendMode(.destinationIn)
         pctx.draw(glyphImage, in: full)
         if config.pictureBlend == 0 {
@@ -243,6 +294,7 @@ final class RainUIView: UIView {
 
     override func draw(_ rect: CGRect) {
         guard let ctx = UIGraphicsGetCurrentContext() else { return }
+        let started = CACurrentMediaTime()
         let bg = config.bg
         ctx.setFillColor(red: CGFloat(bg.r) / 255, green: CGFloat(bg.g) / 255, blue: CGFloat(bg.b) / 255, alpha: 1)
         ctx.fill(bounds)
@@ -250,7 +302,11 @@ final class RainUIView: UIView {
 
         var stats: (lit: Int, drawn: Int)?
         if config.usePicture, let picture = pictureImage {
-            stats = drawWithPicture(ctx, sim: sim, picture: picture)
+            if hasBlackBackground && config.pictureBlend != 1 {
+                stats = drawWithPictureDirect(ctx, sim: sim, picture: picture)
+            } else {
+                stats = drawWithPicture(ctx, sim: sim, picture: picture)
+            }
         }
         if stats == nil {
             // UIKit's context has its origin at the top left, Core Text expects the opposite. Flip
@@ -263,11 +319,15 @@ final class RainUIView: UIView {
             ctx.restoreGState()
         }
 
+        let elapsed = (CACurrentMediaTime() - started) * 1000
+        drawMs = drawMs == 0 ? elapsed : drawMs * 0.9 + elapsed * 0.1
+
         if UserDefaults.standard.bool(forKey: "debugOverlay") {
             let usable = atlas?.count ?? 0
+            let timing = String(format: "draw %.1f ms", drawMs)
             let text = "\(sim.cols)x\(sim.rows) cell \(cellW)x\(cellH) streams \(sim.streamCount) "
                 + "lit \(stats?.lit ?? 0) drawn \(stats?.drawn ?? 0) glyphs \(usable) "
-                + "ticks \(ticks) picture \(pictureImage != nil) blend \(config.pictureBlend)"
+                + "ticks \(ticks) picture \(pictureImage != nil) blend \(config.pictureBlend) \(timing)"
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular),
                 .foregroundColor: UIColor.yellow,

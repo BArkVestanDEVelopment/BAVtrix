@@ -2,6 +2,12 @@ import Foundation
 
 /// Final colour of a lit cell: depth shade, trail fade and head brightness applied.
 public enum Palette {
+    // powf() tables (index = value * 256): the colour of every lit cell is computed each frame.
+    private static let table13: [Float] = (0...256).map { powf(Float($0) / 256, 1.3) }
+    private static let table22: [Float] = (0...256).map { powf(Float($0) / 256, 2.2) }
+    fileprivate static func pow13(_ x: Float) -> Float { table13[Int(min(max(x, 0), 1) * 256 + 0.5)] }
+    fileprivate static func pow22(_ x: Float) -> Float { table22[Int(min(max(x, 0), 1) * 256 + 0.5)] }
+
     private static func scale(_ c: UInt8, _ k: Int) -> UInt8 {
         UInt8(min((Int(c) * k + 127) / 255, 255))
     }
@@ -27,7 +33,7 @@ public enum Palette {
         let len = Float(max(slot.len, 1))
         var fade: Float = 1
         if !bright {
-            let f = 0.12 + 0.88 * powf(min(max(1 - age / len, 0), 1), 1.3)
+            let f = 0.12 + 0.88 * pow13(1 - age / len)
             fade = (f * 32).rounded() / 32
         }
         let boost: Float = bright ? cfg.headBrightness : 1
@@ -55,9 +61,9 @@ extension Palette {
         let slot = Int(cell.sid) < sim.slots.count ? sim.slots[Int(cell.sid)] : Slot()
         let age = Float(max(slot.head - row, 0))
         let len = Float(max(slot.len, 1))
-        let fade: Float = bright ? 1 : 0.12 + 0.88 * powf(min(max(1 - age / len, 0), 1), 1.3)
+        let fade: Float = bright ? 1 : 0.12 + 0.88 * Palette.pow13(1 - age / len)
         let level = min(Float(cell.shade) * fade / 255, 1)
-        let v = 0.06 + 0.94 * powf(level, 2.2)
+        let v = 0.06 + 0.94 * Palette.pow22(level)
         return (v * 32).rounded() / 32
     }
 }
