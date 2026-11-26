@@ -42,6 +42,8 @@ final class RainUIView: UIView {
     // The picture already scaled and placed at screen resolution, so that no frame has to resample it.
     private var scaledPicture: CGImage?
     private var scaledPictureKey = ""
+    /// How many times the scaled picture was rebuilt (debug overlay: must stay put while running).
+    private var pictureBuilds = 0
     /// Smoothed duration of `draw(_:)` in milliseconds (shown by the debug overlay).
     private var drawMs: Double = 0
 
@@ -213,6 +215,7 @@ final class RainUIView: UIView {
         layer.draw(picture, in: pictureRect(for: picture))
         scaledPicture = layer.makeImage()
         scaledPictureKey = key
+        pictureBuilds += 1
         return scaledPicture
     }
 
@@ -327,7 +330,7 @@ final class RainUIView: UIView {
             let timing = String(format: "draw %.1f ms", drawMs)
             let text = "\(sim.cols)x\(sim.rows) cell \(cellW)x\(cellH) streams \(sim.streamCount) "
                 + "lit \(stats?.lit ?? 0) drawn \(stats?.drawn ?? 0) glyphs \(usable) "
-                + "ticks \(ticks) picture \(pictureImage != nil) blend \(config.pictureBlend) \(timing)"
+                + "ticks \(ticks) picture \(pictureImage != nil) blend \(config.pictureBlend) \(timing) builds \(pictureBuilds)"
             let attrs: [NSAttributedString.Key: Any] = [
                 .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular),
                 .foregroundColor: UIColor.yellow,
